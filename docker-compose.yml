@@ -1,0 +1,26 @@
+services:
+  database:
+    image: postgres:14.5
+    restart: always
+    environment:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+      POSTGRES_DB: cats-social
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    expose:
+      - "5433"
+    ports:
+      - 5433:5433
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: -p 5433
+volumes:
+  pg-data:
+    driver: local
+  cache:
+    driver: local
+

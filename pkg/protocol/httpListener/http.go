@@ -53,11 +53,7 @@ func (p *HttpImpl) Shutdown(ctx context.Context) error {
 
 func Start() *HttpImpl {
 
-	// expireTokenTime, err := time.ParseDuration(config.Get().Redis.TokenExpiredTime)
-	// if err != nil {
-	// 	expireTokenTime = time.Duration(15 * time.Minute)
-	// }
-
+	//db := database.Run()
 	httpHandlerImpl := NewHttpHandler()
 	httpRouterImpl := NewHttpRoute(httpHandlerImpl)
 	httpImpl := NewHttpProtocol(httpRouterImpl)

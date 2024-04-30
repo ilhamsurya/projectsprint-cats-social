@@ -18,13 +18,10 @@ var key = config.Get().Auth.SecretKey
 var accessTokenExpiredTime = config.Get().Auth.AccessTokenExpiredTime
 var refreshTokenExpiredTime = config.Get().Auth.RefreshTokenExpiredTime
 
-func GenerateToken(userId uint, sellerId uint, userRoleid int, tokenType string, isSeller bool) (string, error) {
+func GenerateToken(userId uint, tokenType string) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["issuer"] = "JWT_issuer"
 	claims["userId"] = userId
-	claims["sellerId"] = sellerId
-	claims["roleId"] = userRoleid
-	claims["isSeller"] = isSeller
 	claims["issuedAt"] = time.Now().Unix()
 
 	if tokenType == "ACCESS_TOKEN" {
@@ -64,18 +61,16 @@ func GenerateAccessTokenByRefreshToken(c *gin.Context) (string, error) {
 
 	var role int
 	var userId uint
-	var sellerId uint
 	var currTokenType string
 	var expireAt int64
-	var isSeller bool
+
 	claims, ok := tokenData.Claims.(jwt.MapClaims)
 	if ok && tokenData.Valid {
 		role = int(claims["roleId"].(float64))
 		userId = uint(claims["userId"].(float64))
-		sellerId = uint(claims["sellerId"].(float64))
 		currTokenType = claims["tokenType"].(string)
 		expireAt = int64(claims["exp"].(float64))
-		isSeller = claims["isSeller"].(bool)
+
 	}
 
 	if currTokenType != "REFRESH_TOKEN" {
@@ -91,7 +86,7 @@ func GenerateAccessTokenByRefreshToken(c *gin.Context) (string, error) {
 		return "", fmt.Errorf(msg.ErrTokenAlreadyExpired)
 	}
 
-	res, err := GenerateToken(userId, sellerId, role, "ACCESS_TOKEN", isSeller)
+	res, err := GenerateToken(userId, "ACCESS_TOKEN")
 	if err != nil {
 		return "", err
 	}
@@ -179,24 +174,6 @@ func ExtractUserID(c *gin.Context, tokenString string) (uint, error) {
 	return 0, nil
 }
 
-func ExtractRole(c *gin.Context, tokenString string) (int, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(key), nil
-	})
-	if err != nil {
-		return 0, err
-	}
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if ok && token.Valid {
-		role, _ := strconv.ParseUint(fmt.Sprintf("%.0f", claims["roleId"]), 10, 32)
-		return int(role), nil
-	}
-	return 0, errors.New(msg.ErrInvalidToken)
-}
-
 func ExtractTokenType(c *gin.Context, tokenString string) (string, error) {
 	tokenType, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -220,23 +197,6 @@ func GetUserId(c *gin.Context) (uint, error) {
 		return 0, errors.New(msg.ErrTokenNotFound)
 	}
 	return ExtractUserID(c, token)
-}
-
-func GetUserIdAndRoleId(c *gin.Context) (uint, int, error) {
-	token := ExtractToken(c)
-
-	userId, err := ExtractUserID(c, token)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, msg.BadRequest(err.Error()))
-		return 0, 0, err
-	}
-
-	role, err := ExtractRole(c, token)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, msg.BadRequest(err.Error()))
-		return 0, 0, err
-	}
-	return userId, role, nil
 }
 
 func JwtAuthUserMiddleware() gin.HandlerFunc {
@@ -285,48 +245,4 @@ func checkTokenTimeValid(timestamp interface{}) bool {
 		}
 	}
 	return false
-}
-
-func GetSellerId(c *gin.Context) (uint, error) {
-	token := ExtractToken(c)
-	if token == "" {
-		return 0, errors.New(msg.ErrTokenNotFound)
-	}
-
-	claim, err := tokenToMapClaim(token)
-	if err != nil {
-		return 0, err
-	}
-
-	rawSellerId, ok := claim["sellerId"]
-	if !ok {
-		return 0, errors.New("sellerId field is not found")
-	}
-
-	sellerId, ok := rawSellerId.(float64)
-	if !ok {
-		return 0, errors.New("field type is invalid")
-	}
-
-	return uint(sellerId), nil
-}
-
-func tokenToMapClaim(inputToken string) (jwt.MapClaims, error) {
-	result, err := jwt.ParseWithClaims(inputToken, jwt.MapClaims{}, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-		}
-		return []byte(key), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := result.Claims.(jwt.MapClaims)
-	if !ok || !result.Valid {
-		return nil, errors.New("invalid token")
-	}
-
-	return claims, nil
 }

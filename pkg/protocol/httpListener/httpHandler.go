@@ -2,7 +2,7 @@ package httpListener
 
 import (
 	"net/http"
-	"projectsphere/cats-social/pkg/middleware/auth"
+	userHandler "projectsphere/cats-social/internal/user/handler"
 	"projectsphere/cats-social/pkg/middleware/logger"
 	"projectsphere/cats-social/pkg/protocol/msg"
 	"projectsphere/cats-social/pkg/utils/config"
@@ -11,10 +11,15 @@ import (
 )
 
 type HttpHandlerImpl struct {
+	userHandler userHandler.UserHandler
 }
 
-func NewHttpHandler() *HttpHandlerImpl {
-	return &HttpHandlerImpl{}
+func NewHttpHandler(
+	userHandler userHandler.UserHandler,
+) *HttpHandlerImpl {
+	return &HttpHandlerImpl{
+		userHandler: userHandler,
+	}
 }
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -42,10 +47,9 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 	server.Static("/v1/docs", "./dist")
 	basePath := server.Group(config.Get().Application.Group)
 
-	// basePath.POST("/login", h.UserLogin)
-
 	AddUserRouter(
 		basePath,
+		h.userHandler,
 	)
 
 	return server
@@ -53,12 +57,13 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 
 func AddUserRouter(
 	r *gin.RouterGroup,
-
+	userHandler userHandler.UserHandler,
 ) {
 	user := r.Group("/user")
+	user.POST("/register", userHandler.Register)
 
-	user.Use(auth.JwtAuthUserMiddleware())
-	{
+	// user.Use(auth.JwtAuthUserMiddleware())
+	// {
 
-	}
+	// }
 }

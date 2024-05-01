@@ -6,6 +6,8 @@ import (
 	"projectsphere/cats-social/pkg/middleware/logger"
 	"projectsphere/cats-social/pkg/protocol/httpListener"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {

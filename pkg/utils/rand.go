@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	mathrand.Seed(time.Now().UnixNano())
+	mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
 }
 
 func GenerateRandomBytes(n int) ([]byte, error) {

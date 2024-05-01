@@ -5,9 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
+	userHandler "projectsphere/cats-social/internal/user/handler"
+	userRepository "projectsphere/cats-social/internal/user/repository"
+	userService "projectsphere/cats-social/internal/user/service"
+	"projectsphere/cats-social/pkg/database"
 	"projectsphere/cats-social/pkg/utils/config"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,8 +58,20 @@ func (p *HttpImpl) Shutdown(ctx context.Context) error {
 
 func Start() *HttpImpl {
 
-	//db := database.Run()
-	httpHandlerImpl := NewHttpHandler()
+	config := config.Get()
+
+	db, err := sqlx.Connect("postgres", fmt.Sprintf("postgresql://%s:%s@%s/%s?%s", config.DB.Postgre.User, config.DB.Postgre.Pass, config.DB.Postgre.Host, config.DB.Postgre.Name, config.DB.Postgre.Params))
+	if err != nil {
+		log.Error().Msg(err.Error())
+	}
+
+	postgresConnector := database.NewPostgresConnector(context.TODO(), db)
+
+	userRepo := userRepository.NewUserRepo(postgresConnector)
+	userSvc := userService.NewUserService(userRepo)
+	userHandler := userHandler.NewUserHandler(userSvc)
+
+	httpHandlerImpl := NewHttpHandler(userHandler)
 	httpRouterImpl := NewHttpRoute(httpHandlerImpl)
 	httpImpl := NewHttpProtocol(httpRouterImpl)
 	return httpImpl

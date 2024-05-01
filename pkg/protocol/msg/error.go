@@ -31,7 +31,7 @@ const (
 	ErrInvalidTokenType        = "invalid token type"
 	ErrTokenAlreadyExpired     = "token already expired"
 	ErrRequiredOldPassword     = "old password is required"
-	ErrInvalidNewPassword      = "new password is invalid"
+	ErrInvalidPassword         = "Password should contains characters and must be between 5 and 15 characters long"
 	ErrOTPCodeNotFound         = "otp code is not found"
 
 	ErrParseToFormatDate   = "please insert date with format : yyyy-mm-dd"
@@ -64,7 +64,7 @@ const (
 	ErrUsernameAlreadyExist   = "user name already exists"
 	ErrUserNotASeller         = "user not a seller"
 	ErrRequiredFullName       = "fullname is required"
-	ErrInvalidFullName        = "fullname can only contain characters and spaces"
+	ErrInvalidFullName        = "name can only contain characters and spaces, and must be between 5 and 15 characters long"
 	ErrFullNameAlreadyUsed    = "fullname already used"
 	ErrRequiredPhoneNumber    = "phone number is required"
 	ErrInvalidPhoneNumber     = "phone number is invalid"
@@ -312,6 +312,15 @@ const (
 
 func (r *RespError) Error() string {
 	return fmt.Sprintf("%d: %v", r.Code, r.Message)
+}
+
+func UnwrapRespError(err interface{}) RespError {
+	respError, ok := err.(*RespError)
+	if !ok {
+		panic("fail when casting the respError type")
+	}
+
+	return *respError
 }
 
 func InternalServerError(msg string) error {

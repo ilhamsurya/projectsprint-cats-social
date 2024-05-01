@@ -18,7 +18,7 @@ var key = config.Get().Auth.SecretKey
 var accessTokenExpiredTime = config.Get().Auth.AccessTokenExpiredTime
 var refreshTokenExpiredTime = config.Get().Auth.RefreshTokenExpiredTime
 
-func GenerateToken(userId uint, tokenType string) (string, error) {
+func GenerateToken(userId uint32, tokenType string) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["issuer"] = "JWT_issuer"
 	claims["userId"] = userId
@@ -27,14 +27,14 @@ func GenerateToken(userId uint, tokenType string) (string, error) {
 	if tokenType == "ACCESS_TOKEN" {
 		accessTokenExpiredDuration, err := time.ParseDuration(accessTokenExpiredTime)
 		if err != nil {
-			return "", err
+			return "", msg.InternalServerError(err.Error())
 		}
 		claims["exp"] = time.Now().Add(accessTokenExpiredDuration).Unix()
 		claims["tokenType"] = "ACCESS_TOKEN"
 	} else if tokenType == "REFRESH_TOKEN" {
 		refreshTokenExpiredDuration, err := time.ParseDuration(refreshTokenExpiredTime)
 		if err != nil {
-			return "", err
+			return "", msg.InternalServerError(err.Error())
 		}
 		claims["exp"] = time.Now().Add(refreshTokenExpiredDuration).Unix()
 		claims["tokenType"] = "REFRESH_TOKEN"
@@ -43,55 +43,55 @@ func GenerateToken(userId uint, tokenType string) (string, error) {
 	return token.SignedString([]byte(key))
 }
 
-func GenerateAccessTokenByRefreshToken(c *gin.Context) (string, error) {
-	tokenString := ExtractToken(c)
-	if tokenString == "" {
-		return "", errors.New(msg.ErrTokenNotExist)
-	}
+// func GenerateAccessTokenByRefreshToken(c *gin.Context) (string, error) {
+// 	tokenString := ExtractToken(c)
+// 	if tokenString == "" {
+// 		return "", errors.New(msg.ErrTokenNotExist)
+// 	}
 
-	tokenData, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(key), nil
-	})
-	if err != nil {
-		return "", err
-	}
+// 	tokenData, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+// 		}
+// 		return []byte(key), nil
+// 	})
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	var role int
-	var userId uint
-	var currTokenType string
-	var expireAt int64
+// 	var role int
+// 	var userId uint
+// 	var currTokenType string
+// 	var expireAt int64
 
-	claims, ok := tokenData.Claims.(jwt.MapClaims)
-	if ok && tokenData.Valid {
-		role = int(claims["roleId"].(float64))
-		userId = uint(claims["userId"].(float64))
-		currTokenType = claims["tokenType"].(string)
-		expireAt = int64(claims["exp"].(float64))
+// 	claims, ok := tokenData.Claims.(jwt.MapClaims)
+// 	if ok && tokenData.Valid {
+// 		role = int(claims["roleId"].(float64))
+// 		userId = uint(claims["userId"].(float64))
+// 		currTokenType = claims["tokenType"].(string)
+// 		expireAt = int64(claims["exp"].(float64))
 
-	}
+// 	}
 
-	if currTokenType != "REFRESH_TOKEN" {
-		return "", fmt.Errorf(msg.ErrInvalidTokenType)
-	}
+// 	if currTokenType != "REFRESH_TOKEN" {
+// 		return "", fmt.Errorf(msg.ErrInvalidTokenType)
+// 	}
 
-	if role != 1 && role != 2 {
-		return "", errors.New(msg.ErrUserRoleNotExist)
-	}
+// 	if role != 1 && role != 2 {
+// 		return "", errors.New(msg.ErrUserRoleNotExist)
+// 	}
 
-	isTimeValid := checkTokenTimeValid(expireAt)
-	if !isTimeValid {
-		return "", fmt.Errorf(msg.ErrTokenAlreadyExpired)
-	}
+// 	isTimeValid := checkTokenTimeValid(expireAt)
+// 	if !isTimeValid {
+// 		return "", fmt.Errorf(msg.ErrTokenAlreadyExpired)
+// 	}
 
-	res, err := GenerateToken(userId, "ACCESS_TOKEN")
-	if err != nil {
-		return "", err
-	}
-	return res, nil
-}
+// 	res, err := GenerateToken(userId, "ACCESS_TOKEN")
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return res, nil
+// }
 
 func TokenValid(c *gin.Context, isAdminRole bool, isUserRole bool) error {
 	tokenString := ExtractToken(c)

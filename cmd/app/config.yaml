@@ -3,12 +3,12 @@ APPLICATION:
   GROUP: api/v1/
 DB:
   POSTGRE:
-    DB_HOT: 172.17.0.1
-    DB_NAME: cats-social
-    DB_PORT: 5433
-    DB_USERNAME:
-    DB_PASSWORD:
-    DB_PARAMS: "sslmode=disabled"
+    HOST: 172.17.0.1
+    NAME: cats_social_db
+    PORT: 5433
+    USERNAME: cats_social_db_owner
+    PASSWORD: 4j2kxetmuPIK
+    PARAMS: "sslmode=require"
 AUTH:
   JWT_SECRET:
   ACCESS_TOKEN_EXPIRED_TIME: 15m

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"projectsphere/cats-social/internal/cat/entity"
 	"projectsphere/cats-social/pkg/database"
 	"projectsphere/cats-social/pkg/protocol/msg"
@@ -20,22 +21,41 @@ func NewCatRepo(dbConnector database.PostgresConnector) CatRepo {
 }
 
 func (r CatRepo) CreateCat(ctx context.Context, param entity.CatParam) (entity.Cat, error) {
-	query, args, err := r.dbConnector.SQLBuilder.
-		Insert(catTableName).
-		Columns("name", "race", "sex", "age_in_month", "description", "image_url").
-		Values(param.Name, param.Race, param.Sex, param.AgeInMonth, param.Description, param.ImageURL).
-		Suffix("RETURNING id_cat, name, race, sex, age_in_month, description, image_url, isMatch, created_at, updated_at").
-		ToSql()
+	query := `
+		INSERT INTO cats (name, race, sex, age_in_month, description, image_url)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id_cat, name, race, sex, age_in_month, description, image_url, isMatch, created_at, updated_at
+	`
+
+	var cat entity.Cat
+	err := r.dbConnector.DB.QueryRowContext(
+		ctx,
+		query,
+		param.Name,
+		param.Race,
+		param.Sex,
+		param.AgeInMonth,
+		param.Description,
+		param.ImageURL,
+	).Scan(
+		&cat.IdCat,
+		&cat.Name,
+		&cat.Race,
+		&cat.Sex,
+		&cat.AgeInMonth,
+		&cat.Description,
+		&cat.ImageURL,
+		&cat.IsMatch,
+		&cat.CreatedAt,
+		&cat.UpdatedAt,
+	)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return entity.Cat{}, msg.BadRequest("no rows were returned")
+		}
 		return entity.Cat{}, msg.InternalServerError(err.Error())
 	}
 
-	var row entity.Cat
-
-	if err = r.dbConnector.DB.GetContext(ctx, &row, query, args...); err != nil {
-		return entity.Cat{}, msg.InternalServerError(err.Error())
-	}
-
-	return row, nil
+	return cat, nil
 }

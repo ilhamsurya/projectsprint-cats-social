@@ -2,6 +2,7 @@ package httpListener
 
 import (
 	"net/http"
+	catHandler "projectsphere/cats-social/internal/cat/handler"
 	userHandler "projectsphere/cats-social/internal/user/handler"
 	"projectsphere/cats-social/pkg/middleware/logger"
 	"projectsphere/cats-social/pkg/protocol/msg"
@@ -12,10 +13,12 @@ import (
 
 type HttpHandlerImpl struct {
 	userHandler userHandler.UserHandler
+	catHandler.CatHandler
 }
 
 func NewHttpHandler(
 	userHandler userHandler.UserHandler,
+	catHandler catHandler.CatHandler,
 ) *HttpHandlerImpl {
 	return &HttpHandlerImpl{
 		userHandler: userHandler,
@@ -50,6 +53,7 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 	AddUserRouter(
 		basePath,
 		h.userHandler,
+		h.CatHandler,
 	)
 
 	return server
@@ -58,9 +62,13 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 func AddUserRouter(
 	r *gin.RouterGroup,
 	userHandler userHandler.UserHandler,
+	catHandler catHandler.CatHandler,
 ) {
 	user := r.Group("/user")
 	user.POST("/register", userHandler.Register)
+
+	cat := r.Group("cat")
+	cat.POST("/cat", catHandler.Create)
 
 	// user.Use(auth.JwtAuthUserMiddleware())
 	// {

@@ -16,12 +16,12 @@ CREATE TYPE "sex_list" AS ENUM (
   'female'
 );
 
-CREATE TABLE "user" (
-  "id_user" integer PRIMARY KEY,
-  "email" varchar,
-  "name" varchar,
-  "password" varchar,
-  "created_at" timestamp,
+CREATE TABLE "users" (
+  "id_user" serial PRIMARY KEY,
+  "email" varchar unique not null,
+  "name" varchar not null,
+  "password" varchar not null,
+  "created_at" timestamp default current_timestamp,
   "updated_at" timestamp
 );
 
@@ -55,6 +55,6 @@ CREATE TABLE "match_request" (
   "id_matched_Cat" int
 );
 
-ALTER TABLE "user_cat" ADD FOREIGN KEY ("id_user") REFERENCES "user" ("id_user");
+ALTER TABLE "user_cat" ADD FOREIGN KEY ("id_user") REFERENCES "users" ("id_user");
 
 ALTER TABLE "user_cat" ADD FOREIGN KEY ("id_cat") REFERENCES "cat" ("id_cat");

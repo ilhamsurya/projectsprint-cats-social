@@ -5,6 +5,7 @@ import (
 )
 
 func IsValidFullName(fullname string) bool {
-	re := regexp.MustCompile(`^[a-zA-Z\s]{3,40}$`)
+	// contains only letters and spaces, and must be between 3 and 40 characters long
+	re := regexp.MustCompile(`^[a-zA-Z\s]{5,15}$`)
 	return re.MatchString(fullname)
 }

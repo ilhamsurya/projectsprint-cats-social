@@ -13,7 +13,7 @@ import (
 
 type HttpHandlerImpl struct {
 	userHandler userHandler.UserHandler
-	catHandler.CatHandler
+	catHandler  catHandler.CatHandler
 }
 
 func NewHttpHandler(
@@ -22,6 +22,7 @@ func NewHttpHandler(
 ) *HttpHandlerImpl {
 	return &HttpHandlerImpl{
 		userHandler: userHandler,
+		catHandler:  catHandler,
 	}
 }
 func CORSMiddleware() gin.HandlerFunc {
@@ -53,7 +54,7 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 	AddUserRouter(
 		basePath,
 		h.userHandler,
-		h.CatHandler,
+		h.catHandler,
 	)
 
 	return server
@@ -67,8 +68,11 @@ func AddUserRouter(
 	user := r.Group("/user")
 	user.POST("/register", userHandler.Register)
 
-	cat := r.Group("cat")
-	cat.POST("/cat", catHandler.Create)
+	cat := r.Group("cat") // Adjusted route group
+	{
+		cat.PUT("/:id", catHandler.Update) // PUT method for updating cat with ID
+		cat.POST("", catHandler.Create)
+	}
 
 	// user.Use(auth.JwtAuthUserMiddleware())
 	// {

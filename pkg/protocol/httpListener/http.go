@@ -70,13 +70,13 @@ func Start() *HttpImpl {
 
 	postgresConnector := database.NewPostgresConnector(context.TODO(), db)
 
-	userRepo := userRepository.NewUserRepo(postgresConnector)
-	userSvc := userService.NewUserService(userRepo)
-	userHandler := userHandler.NewUserHandler(userSvc)
-
 	catRepo := catRepository.NewCatRepo(postgresConnector)
 	catSvc := catService.NewCatService(catRepo)
 	catHandler := catHandler.NewCatHandler(catSvc)
+
+	userRepo := userRepository.NewUserRepo(postgresConnector)
+	userSvc := userService.NewUserService(userRepo)
+	userHandler := userHandler.NewUserHandler(userSvc)
 
 	httpHandlerImpl := NewHttpHandler(
 		userHandler,

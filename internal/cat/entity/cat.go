@@ -19,22 +19,21 @@ type Cat struct {
 }
 
 type CatParam struct {
-	Name        string `json:"name"`
-	Race        string `json:"race"`
-	Sex         string `json:"sex"`
-	AgeInMonth  int    `json:"age_in_month"`
-	Description string `json:"description"`
-	ImageURL    string `json:"image_url"`
-	IsMatch     bool   `json:"isMatch"`
+	Name        string   `json:"name"`
+	Race        string   `json:"race"`
+	Sex         string   `json:"sex"`
+	AgeInMonth  int      `json:"ageInMonth"`
+	Description string   `json:"description"`
+	ImageURLs   []string `json:"imageUrls"`
 }
 
 type CreateCatRequest struct {
-	Name        string   `json:"name" validate:"required,min=1,max=30"`
-	Race        string   `json:"race" validate:"required,oneof=Persian MaineCoon Siamese Ragdoll Bengal Sphynx BritishShorthair Abyssinian ScottishFold Birman"`
-	Sex         string   `json:"sex" validate:"required,oneof=male female"`
-	AgeInMonth  int      `json:"ageInMonth" validate:"required,min=1,max=120082"`
-	Description string   `json:"description" validate:"required,min=1,max=200"`
-	ImageURLs   []string `json:"imageUrls" validate:"required,min=1,dive,url"`
+	Name        string   `json:"name"`
+	Race        string   `json:"race"`
+	Sex         string   `json:"sex"`
+	AgeInMonth  int      `json:"ageInMonth"`
+	Description string   `json:"description"`
+	ImageURLs   []string `json:"imageUrls"`
 }
 
 type CreateCatResponse struct {
@@ -42,7 +41,17 @@ type CreateCatResponse struct {
 	Data    CreateCatData `json:"data"`
 }
 
+type UpdateCatResponse struct {
+	Message string        `json:"message"`
+	Data    UpdateCatData `json:"data"`
+}
+
 type CreateCatData struct {
 	ID        uint32    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type UpdateCatData struct {
+	ID        uint32    `json:"id"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }

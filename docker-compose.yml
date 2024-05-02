@@ -3,21 +3,21 @@ services:
     image: postgres:14.5
     restart: always
     environment:
-      POSTGRES_USER:
-      POSTGRES_PASSWORD:
-      POSTGRES_DB: cats-social
+      POSTGRES_USER: cats_social_db_owner
+      POSTGRES_PASSWORD: 4j2kxetmuPIK
+      POSTGRES_DB: cats_social_db
     build:
       context: .
       dockerfile: ./Dockerfile
     expose:
-      - "5433"
+      - "5432"
     ports:
-      - 5433:5433
+      - 5432:5432
     volumes:
       - pg-data:/var/lib/postgresql/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: -p 5433
+    command: -p 5432
 volumes:
   pg-data:
     driver: local

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	catHandler "projectsphere/cats-social/internal/cat/handler"
+	catRepository "projectsphere/cats-social/internal/cat/repository"
+	catService "projectsphere/cats-social/internal/cat/service"
 	userHandler "projectsphere/cats-social/internal/user/handler"
 	userRepository "projectsphere/cats-social/internal/user/repository"
 	userService "projectsphere/cats-social/internal/user/service"
@@ -67,12 +70,20 @@ func Start() *HttpImpl {
 
 	postgresConnector := database.NewPostgresConnector(context.TODO(), db)
 
+	catRepo := catRepository.NewCatRepo(postgresConnector)
+	catSvc := catService.NewCatService(catRepo)
+	catHandler := catHandler.NewCatHandler(catSvc)
+
 	userRepo := userRepository.NewUserRepo(postgresConnector)
 	userSvc := userService.NewUserService(userRepo)
 	userHandler := userHandler.NewUserHandler(userSvc)
 
-	httpHandlerImpl := NewHttpHandler(userHandler)
+	httpHandlerImpl := NewHttpHandler(
+		userHandler,
+		catHandler,
+	)
 	httpRouterImpl := NewHttpRoute(httpHandlerImpl)
 	httpImpl := NewHttpProtocol(httpRouterImpl)
+
 	return httpImpl
 }

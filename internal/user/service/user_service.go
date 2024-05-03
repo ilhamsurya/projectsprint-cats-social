@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"projectsphere/cats-social/internal/user/entity"
 	"projectsphere/cats-social/internal/user/repository"
 	"projectsphere/cats-social/pkg/middleware/auth"
@@ -11,15 +12,17 @@ import (
 
 type UserService struct {
 	userRepo repository.UserRepo
+	saltLen  int
 }
 
-func NewUserService(userRepo repository.UserRepo) UserService {
+func NewUserService(userRepo repository.UserRepo, saltLen int) UserService {
 	return UserService{
 		userRepo: userRepo,
+		saltLen:  saltLen,
 	}
 }
 
-func (s UserService) Register(ctx context.Context, userParam entity.UserParam) (entity.UserRegisterResponse, error) {
+func (s UserService) Register(ctx context.Context, userParam *entity.UserParam) (entity.UserRegisterResponse, error) {
 	if !utils.IsValidFullName(userParam.Name) {
 		return entity.UserRegisterResponse{}, msg.BadRequest(msg.ErrInvalidFullName)
 	}
@@ -35,12 +38,19 @@ func (s UserService) Register(ctx context.Context, userParam entity.UserParam) (
 		return entity.UserRegisterResponse{}, msg.BadRequest(msg.ErrInvalidPassword)
 	}
 
-	user, err := s.userRepo.CreateUser(ctx, userParam)
+	userParam.Salt = utils.GenerateRandomAlphaNumeric(int(s.saltLen))
+	hashedPassword := auth.GenerateHash([]byte(userParam.Password), []byte(userParam.Salt))
+	userParam.Password = hashedPassword
+
+	fmt.Println(userParam.Salt)
+	fmt.Println(userParam.Password)
+
+	user, err := s.userRepo.CreateUser(ctx, *userParam)
 	if err != nil {
 		return entity.UserRegisterResponse{}, err
 	}
 
-	accessToken, err := auth.GenerateToken(user.Id_user, "ACCESS_TOKEN")
+	accessToken, err := auth.GenerateToken(user.IdUser, "ACCESS_TOKEN")
 	if err != nil {
 		return entity.UserRegisterResponse{}, err
 	}

@@ -1,8 +1,9 @@
-CREATE TABLE "user" (
+CREATE TABLE "users" (
   "id_user" SERIAL PRIMARY KEY,
   "email" varchar,
   "name" varchar,
   "password" varchar,
+  "salt" varchar,
   "created_at" timestamp DEFAULT CURRENT_TIMESTAMP,
   "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP
 );

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"projectsphere/cats-social/internal/user/entity"
 	"projectsphere/cats-social/internal/user/repository"
 	"projectsphere/cats-social/pkg/middleware/auth"
@@ -28,10 +27,7 @@ func (s UserService) Register(ctx context.Context, userParam *entity.UserParam) 
 	}
 
 	if !utils.IsEmailValid(userParam.Email) {
-		return entity.UserRegisterResponse{}, &msg.RespError{
-			Code:    409,
-			Message: msg.ErrInvalidEmail,
-		}
+		return entity.UserRegisterResponse{}, msg.BadRequest(msg.ErrInvalidEmail)
 	}
 
 	if !utils.IsSolidPassword(userParam.Password) {
@@ -41,9 +37,6 @@ func (s UserService) Register(ctx context.Context, userParam *entity.UserParam) 
 	userParam.Salt = utils.GenerateRandomAlphaNumeric(int(s.saltLen))
 	hashedPassword := auth.GenerateHash([]byte(userParam.Password), []byte(userParam.Salt))
 	userParam.Password = hashedPassword
-
-	fmt.Println(userParam.Salt)
-	fmt.Println(userParam.Password)
 
 	user, err := s.userRepo.CreateUser(ctx, *userParam)
 	if err != nil {

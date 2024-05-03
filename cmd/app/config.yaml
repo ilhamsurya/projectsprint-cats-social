@@ -8,7 +8,7 @@ DB:
     PORT: 5433
     USERNAME: cats_social_db_owner
     PASSWORD: 4j2kxetmuPIK
-    PARAMS: "sslmode=require"
+    PARAMS: "sslmode=disable"
 AUTH:
   JWT_SECRET:
   ACCESS_TOKEN_EXPIRED_TIME: 15m

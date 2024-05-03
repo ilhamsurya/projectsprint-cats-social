@@ -22,7 +22,12 @@ type UserParam struct {
 	Salt     string
 }
 
-type UserRegisterResponse struct {
+type UserLoginParam struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type UserResponse struct {
 	Name        string `json:"name"`
 	Email       string `json:"email"`
 	AccessToken string `json:"accessToken"`

@@ -30,7 +30,7 @@ type Config struct {
 	} `mapstructure:"DB"`
 	Auth struct {
 		SecretKey               string `mapstructure:"SECRET_KEY"`
-		AccessTokenExpiredTime  string `mapstructure:"ACCESS_TOKEN_EXPIRED_TIME"`
+		AccessTokenExpiredTime  int    `mapstructure:"ACCESS_TOKEN_EXPIRED_TIME"`
 		RefreshTokenExpiredTime string `mapstructure:"REFRESH_TOKEN_EXPIRED_TIME"`
 		BcryptSalt              int    `mapstructure:"BCRYPT_SALT"`
 	} `mapstructure:"AUTH"`

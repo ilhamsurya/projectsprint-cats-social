@@ -8,6 +8,9 @@ import (
 	catHandler "projectsphere/cats-social/internal/cat/handler"
 	catRepository "projectsphere/cats-social/internal/cat/repository"
 	catService "projectsphere/cats-social/internal/cat/service"
+	matchHandler "projectsphere/cats-social/internal/match/handler"
+	matchRepository "projectsphere/cats-social/internal/match/repository"
+	matchService "projectsphere/cats-social/internal/match/service"
 	userHandler "projectsphere/cats-social/internal/user/handler"
 	userRepository "projectsphere/cats-social/internal/user/repository"
 	userService "projectsphere/cats-social/internal/user/service"
@@ -75,6 +78,10 @@ func Start() *HttpImpl {
 	catSvc := catService.NewCatService(catRepo)
 	catHandler := catHandler.NewCatHandler(catSvc)
 
+	matchRepo := matchRepository.NewMatchRepo(postgresConnector)
+	matchSvc := matchService.NewMatchService(matchRepo, catRepo)
+	matchhandler := matchHandler.NewMatchHandler(matchSvc)
+
 	userRepo := userRepository.NewUserRepo(postgresConnector)
 	userSvc := userService.NewUserService(userRepo, config.Auth.BcryptSalt)
 	userHandler := userHandler.NewUserHandler(userSvc)
@@ -82,6 +89,7 @@ func Start() *HttpImpl {
 	httpHandlerImpl := NewHttpHandler(
 		userHandler,
 		catHandler,
+		matchhandler,
 	)
 	httpRouterImpl := NewHttpRoute(httpHandlerImpl)
 	httpImpl := NewHttpProtocol(httpRouterImpl)

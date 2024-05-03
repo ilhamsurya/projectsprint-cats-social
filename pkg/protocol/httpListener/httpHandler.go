@@ -3,6 +3,7 @@ package httpListener
 import (
 	"net/http"
 	catHandler "projectsphere/cats-social/internal/cat/handler"
+	matchHandler "projectsphere/cats-social/internal/match/handler"
 	userHandler "projectsphere/cats-social/internal/user/handler"
 	"projectsphere/cats-social/pkg/middleware/logger"
 	"projectsphere/cats-social/pkg/protocol/msg"
@@ -12,17 +13,20 @@ import (
 )
 
 type HttpHandlerImpl struct {
-	userHandler userHandler.UserHandler
-	catHandler  catHandler.CatHandler
+	userHandler  userHandler.UserHandler
+	catHandler   catHandler.CatHandler
+	matchHandler matchHandler.MatchHandler
 }
 
 func NewHttpHandler(
 	userHandler userHandler.UserHandler,
 	catHandler catHandler.CatHandler,
+	matchHandler matchHandler.MatchHandler,
 ) *HttpHandlerImpl {
 	return &HttpHandlerImpl{
-		userHandler: userHandler,
-		catHandler:  catHandler,
+		userHandler:  userHandler,
+		catHandler:   catHandler,
+		matchHandler: matchHandler,
 	}
 }
 func CORSMiddleware() gin.HandlerFunc {
@@ -55,6 +59,7 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 		basePath,
 		h.userHandler,
 		h.catHandler,
+		h.matchHandler,
 	)
 
 	return server
@@ -64,6 +69,7 @@ func AddUserRouter(
 	r *gin.RouterGroup,
 	userHandler userHandler.UserHandler,
 	catHandler catHandler.CatHandler,
+	matchHandler matchHandler.MatchHandler,
 ) {
 	user := r.Group("/user")
 	user.POST("/register", userHandler.Register)
@@ -72,6 +78,7 @@ func AddUserRouter(
 	{
 		cat.PUT("/:id", catHandler.Update) // PUT method for updating cat with ID
 		cat.POST("", catHandler.Create)
+		cat.POST("/match", matchHandler.Create)
 	}
 
 	// user.Use(auth.JwtAuthUserMiddleware())

@@ -55,3 +55,8 @@ type UpdateCatData struct {
 	ID        uint32    `json:"id"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
+
+type UserCat struct {
+	UserID int `json:"user_id"`
+	CatID  int `json:"cat_id"`
+}

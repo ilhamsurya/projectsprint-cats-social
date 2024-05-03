@@ -7,13 +7,14 @@ CREATE TABLE "user" (
   "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "user_cat" (
-  "id_user" integer,
-  "id_cat" integer
-);
+-- CREATE TABLE "user_cat" (
+--   "id_user" integer,
+--   "id_cat" integer
+-- );
 
 CREATE TABLE "cat" (
   "id_cat" SERIAL PRIMARY KEY,
+  "id_user" integer,
   "name" varchar,
   "race" varchar,
   "sex" varchar,
@@ -26,8 +27,8 @@ CREATE TABLE "cat" (
 CREATE TABLE "match_cat" (
   "id_match" SERIAL PRIMARY KEY,
   "id_user_cat" integer,
-  "id_matched_Cat" integer,
-  "is_matched" bool
+  "id_matched_cat" integer,
+  "is_matched" boolean
 );
 
 CREATE TABLE "cat_image" (
@@ -36,8 +37,14 @@ CREATE TABLE "cat_image" (
   "image" varchar
 );
 
-ALTER TABLE "user_cat" ADD FOREIGN KEY ("id_user") REFERENCES "user" ("id_user");
+-- ALTER TABLE "user_cat" ADD FOREIGN KEY ("id_user") REFERENCES "user" ("id_user");
 
-ALTER TABLE "user_cat" ADD FOREIGN KEY ("id_cat") REFERENCES "cat" ("id_cat");
+-- ALTER TABLE "user_cat" ADD FOREIGN KEY ("id_cat") REFERENCES "cat" ("id_cat");
 
 ALTER TABLE "cat_image" ADD FOREIGN KEY ("id_cat") REFERENCES "cat" ("id_cat");
+
+ALTER TABLE "cat" ADD FOREIGN KEY ("id_user") REFERENCES "user" ("id_user");
+
+ALTER TABLE "match_cat" ADD FOREIGN KEY ("id_user_cat") REFERENCES "cat" ("id_cat");
+
+ALTER TABLE "match_cat" ADD FOREIGN KEY ("id_matched_cat") REFERENCES "cat" ("id_cat");

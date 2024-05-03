@@ -70,3 +70,57 @@ func (h CatHandler) Update(c *gin.Context) {
 
 	c.JSON(http.StatusOK, resp)
 }
+
+func (h CatHandler) Get(c *gin.Context) {
+	id := c.Query("id")
+	limit := c.DefaultQuery("limit", "5")
+	offset := c.DefaultQuery("offset", "0")
+	race := c.Query("race")
+	sex := c.Query("sex")
+	hasMatched := c.Query("hasMatched")
+	ageInMonth := c.Query("ageInMonth")
+	owned := c.Query("owned")
+	search := c.Query("search")
+
+	param := entity.GetCatParam{
+		IdUser:     1,
+		Race:       race,
+		Sex:        sex,
+		AgeInMonth: ageInMonth,
+		Search:     search,
+	}
+
+	idParam, err := strconv.Atoi(id)
+	if err == nil {
+		param.IdCat = &idParam
+	}
+
+	limitParam, err := strconv.Atoi(limit)
+	if err == nil {
+		param.Limit = &limitParam
+	}
+
+	offsetParam, err := strconv.Atoi(offset)
+	if err == nil {
+		param.Offset = &offsetParam
+	}
+
+	hasMatchedParam, err := strconv.ParseBool(hasMatched)
+	if err == nil {
+		param.HasMatched = &hasMatchedParam
+	}
+
+	hasOwned, err := strconv.ParseBool(owned)
+	if err == nil {
+		param.Owned = &hasOwned
+	}
+
+	resp, err := h.catSvc.Get(c.Request.Context(), param)
+	if err != nil {
+		respError := msg.UnwrapRespError(err)
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	c.JSON(http.StatusOK, msg.ReturnResult("success", resp))
+}

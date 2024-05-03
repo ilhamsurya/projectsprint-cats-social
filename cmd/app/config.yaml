@@ -1,6 +1,6 @@
 APPLICATION:
   PORT: 8080
-  GROUP: api/v1/
+  GROUP: v1/
 DB:
   POSTGRE:
     HOST: 0.0.0.0

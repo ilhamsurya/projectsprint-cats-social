@@ -36,7 +36,10 @@ func (r UserRepo) CreateUser(ctx context.Context, param entity.UserParam) (entit
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "unique") {
-			return entity.User{}, msg.BadRequest(msg.ErrEmailAlreadyExist)
+			return entity.User{}, &msg.RespError{
+				Code:    409,
+				Message: msg.ErrEmailAlreadyExist,
+			}
 		} else {
 			return entity.User{}, msg.InternalServerError(err.Error())
 		}

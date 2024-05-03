@@ -15,6 +15,7 @@ import (
 	userRepository "projectsphere/cats-social/internal/user/repository"
 	userService "projectsphere/cats-social/internal/user/service"
 	"projectsphere/cats-social/pkg/database"
+	"projectsphere/cats-social/pkg/middleware/auth"
 	"projectsphere/cats-social/pkg/utils/config"
 
 	"github.com/gin-gonic/gin"
@@ -83,13 +84,21 @@ func Start() *HttpImpl {
 	matchhandler := matchHandler.NewMatchHandler(matchSvc)
 
 	userRepo := userRepository.NewUserRepo(postgresConnector)
-	userSvc := userService.NewUserService(userRepo, config.Auth.BcryptSalt)
+
+	jwtAuth := auth.NewJwtAuth(
+		config.Auth.AccessTokenExpiredTime,
+		config.Auth.SecretKey,
+		userRepo.IsUserExist,
+	)
+
+	userSvc := userService.NewUserService(userRepo, config.Auth.BcryptSalt, jwtAuth)
 	userHandler := userHandler.NewUserHandler(userSvc)
 
 	httpHandlerImpl := NewHttpHandler(
 		userHandler,
 		catHandler,
 		matchhandler,
+		jwtAuth,
 	)
 	httpRouterImpl := NewHttpRoute(httpHandlerImpl)
 	httpImpl := NewHttpProtocol(httpRouterImpl)

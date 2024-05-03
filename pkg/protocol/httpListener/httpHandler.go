@@ -5,6 +5,7 @@ import (
 	catHandler "projectsphere/cats-social/internal/cat/handler"
 	matchHandler "projectsphere/cats-social/internal/match/handler"
 	userHandler "projectsphere/cats-social/internal/user/handler"
+	"projectsphere/cats-social/pkg/middleware/auth"
 	"projectsphere/cats-social/pkg/middleware/logger"
 	"projectsphere/cats-social/pkg/protocol/msg"
 	"projectsphere/cats-social/pkg/utils/config"
@@ -16,17 +17,20 @@ type HttpHandlerImpl struct {
 	userHandler  userHandler.UserHandler
 	catHandler   catHandler.CatHandler
 	matchHandler matchHandler.MatchHandler
+	jwtAuth      auth.JWTAuth
 }
 
 func NewHttpHandler(
 	userHandler userHandler.UserHandler,
 	catHandler catHandler.CatHandler,
 	matchHandler matchHandler.MatchHandler,
+	jwtAuth auth.JWTAuth,
 ) *HttpHandlerImpl {
 	return &HttpHandlerImpl{
 		userHandler:  userHandler,
 		catHandler:   catHandler,
 		matchHandler: matchHandler,
+		jwtAuth:      jwtAuth,
 	}
 }
 func CORSMiddleware() gin.HandlerFunc {
@@ -53,36 +57,24 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 	})
 
 	server.Static("/v1/docs", "./dist")
-	basePath := server.Group(config.Get().Application.Group)
+	r := server.Group(config.Get().Application.Group)
 
-	AddUserRouter(
-		basePath,
-		h.userHandler,
-		h.catHandler,
-		h.matchHandler,
-	)
-
-	return server
-}
-
-func AddUserRouter(
-	r *gin.RouterGroup,
-	userHandler userHandler.UserHandler,
-	catHandler catHandler.CatHandler,
-	matchHandler matchHandler.MatchHandler,
-) {
 	user := r.Group("/user")
-	user.POST("/register", userHandler.Register)
+	user.POST("/register", h.userHandler.Register)
+	user.POST("/login", h.userHandler.Login)
 
 	cat := r.Group("cat") // Adjusted route group
+	cat.Use(h.jwtAuth.JwtAuthUserMiddleware())
 	{
-		cat.PUT("/:id", catHandler.Update) // PUT method for updating cat with ID
-		cat.POST("", catHandler.Create)
-		cat.POST("/match", matchHandler.Create)
+		cat.PUT("/:id", h.catHandler.Update) // PUT method for updating cat with ID
+		cat.POST("", h.catHandler.Create)
+		cat.POST("/match", h.matchHandler.Create)
 	}
 
 	// user.Use(auth.JwtAuthUserMiddleware())
 	// {
 
 	// }
+
+	return server
 }

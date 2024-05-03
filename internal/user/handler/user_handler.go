@@ -28,12 +28,12 @@ func (h UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.userSvc.Register(c.Request.Context(), *payload)
+	resp, err := h.userSvc.Register(c.Request.Context(), payload)
 	if err != nil {
 		respError := msg.UnwrapRespError(err)
 		c.JSON(respError.Code, respError)
 		return
 	}
 
-	c.JSON(http.StatusCreated, resp)
+	c.JSON(http.StatusCreated, msg.ReturnResult("User registered successfully", resp))
 }

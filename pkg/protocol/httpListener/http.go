@@ -65,7 +65,8 @@ func Start() *HttpImpl {
 
 	db, err := sqlx.Connect("postgres", fmt.Sprintf("postgresql://%s:%s@%s/%s?%s", config.DB.Postgre.User, config.DB.Postgre.Pass, config.DB.Postgre.Host, config.DB.Postgre.Name, config.DB.Postgre.Params))
 	if err != nil {
-		log.Error().Msg(err.Error())
+		// without db we can't do anything so should be aware if we can't connect
+		panic(err.Error())
 	}
 
 	postgresConnector := database.NewPostgresConnector(context.TODO(), db)
@@ -75,7 +76,7 @@ func Start() *HttpImpl {
 	catHandler := catHandler.NewCatHandler(catSvc)
 
 	userRepo := userRepository.NewUserRepo(postgresConnector)
-	userSvc := userService.NewUserService(userRepo)
+	userSvc := userService.NewUserService(userRepo, config.Auth.BcryptSalt)
 	userHandler := userHandler.NewUserHandler(userSvc)
 
 	httpHandlerImpl := NewHttpHandler(

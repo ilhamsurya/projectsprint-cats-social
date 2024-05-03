@@ -2,13 +2,11 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"projectsphere/cats-social/internal/user/entity"
 	"projectsphere/cats-social/pkg/database"
 	"projectsphere/cats-social/pkg/protocol/msg"
+	"strings"
 )
-
-const userTableName string = "users"
 
 type UserRepo struct {
 	dbConnector database.PostgresConnector
@@ -22,28 +20,26 @@ func NewUserRepo(dbConnector database.PostgresConnector) UserRepo {
 
 func (r UserRepo) CreateUser(ctx context.Context, param entity.UserParam) (entity.User, error) {
 	query := `
-	    INSERT INTO "cat" (name, race, sex, age_in_month, description)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id_cat
-    `
-
-	fmt.Print(ctx, query)
-
-	result, err := r.dbConnector.DB.ExecContext(ctx, query, 3, param.Email, param.Name, param.Password)
-	if err != nil {
-		return entity.User{}, msg.InternalServerError(err.Error())
-	}
-
-	id, _ := result.LastInsertId()
-	fmt.Println(id)
+		INSERT INTO users (email, name, password, salt) VALUES 
+		($1, $2, $3, $4) RETURNING id_user, email, name, password, salt, created_at, updated_at
+	`
 
 	var row entity.User
-	err = r.dbConnector.DB.QueryRowContext(ctx,
-		"SELECT id_user, email, name, password, created_at, updated_at FROM \"user\" WHERE id_user = $1",
-		1,
-	).Scan(&row.Id_user, &row.Email, &row.Name, &row.Password, &row.CreatedAt, &row.UpdatedAt)
+	err := r.dbConnector.DB.GetContext(
+		ctx,
+		&row,
+		query,
+		param.Email,
+		param.Name,
+		param.Password,
+		param.Salt,
+	)
 	if err != nil {
-		return entity.User{}, msg.InternalServerError(err.Error())
+		if strings.Contains(err.Error(), "unique") {
+			return entity.User{}, msg.BadRequest(msg.ErrEmailAlreadyExist)
+		} else {
+			return entity.User{}, msg.InternalServerError(err.Error())
+		}
 	}
 
 	return row, nil

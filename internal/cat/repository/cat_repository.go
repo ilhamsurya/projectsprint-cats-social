@@ -24,16 +24,16 @@ func NewCatRepo(dbConnector database.PostgresConnector) CatRepo {
 func (r CatRepo) CreateCat(ctx context.Context, param entity.CatParam, userId uint32) (entity.Cat, error) {
 	var cat entity.Cat
 	query := `
-        INSERT INTO "cats" (name, race, sex, age_in_month, description, id_user)
-        VALUES ($1, $2, $3, $4, $5, %6)
+        INSERT INTO "cats" (name, race, sex, age_in_month, description,id_user)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id_cat
     `
+
 	err := r.dbConnector.DB.QueryRow(query, param.Name,
 		param.Race,
 		param.Sex,
 		param.AgeInMonth,
-		param.Description,
-		userId).Scan(&cat.IdCat)
+		param.Description, int(userId)).Scan(&cat.IdCat)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -98,7 +98,7 @@ func (r CatRepo) UpdateCat(ctx context.Context, catID int, catParam entity.CatPa
 
 	// Scan the updated cat from the database row
 	var updatedCat entity.Cat
-	err := row.Scan(&updatedCat.IdCat, &updatedCat.Name, &updatedCat.Race, &updatedCat.Sex, &updatedCat.AgeInMonth, &updatedCat.Description, &updatedCat.HasMatched, &updatedCat.CreatedAt, &updatedCat.UpdatedAt)
+	err := row.Scan(&updatedCat.IdCat, &updatedCat.Name, &updatedCat.Race, &updatedCat.Sex, &updatedCat.AgeInMonth, &updatedCat.Description, &updatedCat.CreatedAt, &updatedCat.UpdatedAt)
 	if err != nil {
 		return entity.Cat{}, err
 	}
@@ -129,7 +129,7 @@ func (r CatRepo) GetCatByID(ctx context.Context, catID int) (entity.Cat, error) 
         FROM "cats" WHERE id_cat = $1
     `
 	err := r.dbConnector.DB.QueryRowContext(ctx, query, catID).Scan(
-		&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &cat.HasMatched)
+		&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return entity.Cat{}, errors.New("404: Cat not found")
@@ -186,9 +186,9 @@ func (r CatRepo) IsUserCatAssociationValid(ctx context.Context, userID, catID in
 func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperator string, age int) ([]entity.Cat, error) {
 	query := `
 		SELECT 
-			c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description,
+			c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description, 
 			ci.id_image, ci.id_cat, ci.image, 
-			mc.id_match, mc.approved_at
+			mc.id_match, mc.is_matched
 		FROM "cats" c
 		JOIN "cat_images" ci ON ci.id_cat = c.id_cat 
 		JOIN "users" u ON u.id_user = c.id_user
@@ -228,11 +228,11 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 	}
 	if param.HasMatched != nil {
 		if *param.HasMatched {
-			query += fmt.Sprintf(" AND c.approved_at = $%d", argsCount)
+			query += fmt.Sprintf(" AND mc.is_matched = $%d", argsCount)
 			args = append(args, &param.HasMatched)
 			argsCount++
 		} else {
-			query += fmt.Sprintf(" AND (c.approved_at = $%d OR c.approved_at IS NULL)", argsCount)
+			query += fmt.Sprintf(" AND (mc.is_matched = $%d OR mc.is_matched IS NULL)", argsCount)
 			args = append(args, &param.HasMatched)
 			argsCount++
 		}
@@ -275,8 +275,8 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		var cat = entity.Cat{}
 		var image = entity.CatImage{}
 		var idMatch *uint32
-		var approvedAt *sql.NullTime
-		var err = rows.Scan(&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &image.IdImage, &image.IdCat, &image.Image, &idMatch, &approvedAt)
+		var isMatched *bool
+		var err = rows.Scan(&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &image.IdImage, &image.IdCat, &image.Image, &idMatch, &isMatched)
 
 		if err != nil {
 			return []entity.Cat{}, msg.InternalServerError(err.Error())
@@ -299,7 +299,7 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		}
 		catTemp.CatImage = append(catTemp.CatImage, image)
 		if idMatch != nil {
-			catTemp.MatchCat = append(catTemp.MatchCat, entity.MatchCat{IdMatch: *idMatch, ApprovedAt: *approvedAt})
+			catTemp.MatchCat = append(catTemp.MatchCat, entity.MatchCat{IdMatch: *idMatch, IsMatched: *isMatched})
 		}
 		catsMap[int(cat.IdCat)] = catTemp
 	}

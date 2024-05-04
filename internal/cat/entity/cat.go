@@ -13,7 +13,7 @@ type Cat struct {
 	AgeInMonth  int          `db:"age_in_month" json:"age_in_month"`
 	Description string       `db:"description" json:"description"`
 	ImageURL    string       `db:"image_url" json:"image_url"`
-	IsMatch     bool         `db:"isMatch" json:"isMatch"`
+	HasMatched  bool         `db:"has_matched" json:"has_matched"`
 	CreatedAt   time.Time    `db:"created_at" json:"created_at"`
 	UpdatedAt   sql.NullTime `db:"updated_at" json:"updated_at"`
 }
@@ -24,6 +24,7 @@ type CatParam struct {
 	Sex         string   `json:"sex"`
 	AgeInMonth  int      `json:"ageInMonth"`
 	Description string   `json:"description"`
+	HasMatched  bool     `json:"hasMatched"`
 	ImageURLs   []string `json:"imageUrls"`
 }
 

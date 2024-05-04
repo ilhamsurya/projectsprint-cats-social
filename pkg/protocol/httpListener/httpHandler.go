@@ -71,10 +71,5 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 		cat.POST("/match", h.matchHandler.Create)
 	}
 
-	// user.Use(auth.JwtAuthUserMiddleware())
-	// {
-
-	// }
-
 	return server
 }

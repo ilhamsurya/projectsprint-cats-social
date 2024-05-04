@@ -195,7 +195,7 @@ func (s CatService) Get(ctx context.Context, getCatParam entity.GetCatParam) ([]
 
 		var hasMatched bool
 		for _, mc := range v.MatchCat {
-			if mc.IsMatched {
+			if mc.ApprovedAt.Valid {
 				hasMatched = true
 				break
 			}

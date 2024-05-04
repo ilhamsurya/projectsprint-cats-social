@@ -67,12 +67,11 @@ func Start() *HttpImpl {
 
 	config := config.Get()
 
-	db, err := sqlx.Connect("postgres", fmt.Sprintf("postgresql://%s:%s@%s/%s?%s", config.DB.Postgre.User, config.DB.Postgre.Pass, config.DB.Postgre.Host, config.DB.Postgre.Name, config.DB.Postgre.Params))
+	db, err := sqlx.Connect("postgres", fmt.Sprintf("postgresql://%s:%s@%s:%v/%s?%s", config.DB.Postgre.User, config.DB.Postgre.Pass, config.DB.Postgre.Host, config.DB.Postgre.Port, config.DB.Postgre.Name, config.DB.Postgre.Params))
 	if err != nil {
 		// without db we can't do anything so should be aware if we can't connect
 		panic(err.Error())
 	}
-
 	postgresConnector := database.NewPostgresConnector(context.TODO(), db)
 
 	catRepo := catRepository.NewCatRepo(postgresConnector)

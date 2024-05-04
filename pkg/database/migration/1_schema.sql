@@ -8,13 +8,9 @@ CREATE TABLE "users" (
   "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "user_cats" (
-  "id_user" integer,
-  "id_cat" integer
-);
-
 CREATE TABLE "cats" (
   "id_cat" SERIAL PRIMARY KEY,
+  "id_user" integer,
   "name" varchar,
   "race" varchar,
   "sex" varchar,
@@ -22,7 +18,8 @@ CREATE TABLE "cats" (
   "description" varchar,
   "has_matched" bool DEFAULT FALSE,
   "created_at" timestamp DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP
+  "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP,
+  "deleted_at" timestamp NULL DEFAULT NULL
 );
 
 CREATE TABLE "match_cats" (
@@ -37,8 +34,10 @@ CREATE TABLE "cat_images" (
   "image" varchar
 );
 
-ALTER TABLE "user_cats" ADD FOREIGN KEY ("id_user") REFERENCES "users" ("id_user");
-
-ALTER TABLE "user_cats" ADD FOREIGN KEY ("id_cat") REFERENCES "cats" ("id_cat");
-
 ALTER TABLE "cat_images" ADD FOREIGN KEY ("id_cat") REFERENCES "cats" ("id_cat");
+
+ALTER TABLE "cats" ADD FOREIGN KEY ("id_user") REFERENCES "users" ("id_user");
+
+ALTER TABLE "match_cats" ADD FOREIGN KEY ("id_user_cat") REFERENCES "cats" ("id_cat");
+
+ALTER TABLE "match_cats" ADD FOREIGN KEY ("id_matched_cat") REFERENCES "cats" ("id_cat");

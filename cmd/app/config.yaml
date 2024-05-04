@@ -5,7 +5,7 @@ DB:
   POSTGRE:
     HOST: 0.0.0.0
     NAME: cats_social_db
-    PORT: 5433
+    PORT: 5432
     USERNAME: cats_social_db_owner
     PASSWORD: 4j2kxetmuPIK
     PARAMS: "sslmode=disable"

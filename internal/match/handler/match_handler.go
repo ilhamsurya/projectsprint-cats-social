@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"projectsphere/cats-social/internal/match/entity"
 	"projectsphere/cats-social/internal/match/service"
+	"projectsphere/cats-social/pkg/middleware/auth"
 	"projectsphere/cats-social/pkg/protocol/msg"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,4 +39,33 @@ func (h MatchHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, resp)
+}
+
+func (h MatchHandler) Delete(c *gin.Context) {
+	matchID := c.Param("id")
+	userID, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if matchID == "" {
+		c.JSON(http.StatusBadRequest, msg.BadRequest("match ID is required"))
+		return
+	}
+
+	id, err := strconv.Atoi(matchID)
+	if err != nil {
+		respError := msg.UnwrapRespError(msg.NotFound("id is not found"))
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	err = h.matchSvc.Delete(c.Request.Context(), id, int(userID))
+	if err != nil {
+		respError := msg.UnwrapRespError(err)
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	c.JSON(http.StatusOK, msg.ReturnResult("successfully delete match request", nil))
 }

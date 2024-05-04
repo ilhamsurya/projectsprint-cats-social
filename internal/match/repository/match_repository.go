@@ -47,11 +47,11 @@ func (r MatchRepo) CreateMatch(ctx context.Context, param entity.MatchCat) (enti
 func (r MatchRepo) GetMatchByID(ctx context.Context, matchID int) (entity.MatchCat, error) {
 	var match entity.MatchCat
 	query := `
-        SELECT id_match, id_user_cat, id_matched_cat
+        SELECT id_match, id_user_cat, id_matched_cat, approved_at, rejected_at
         FROM "match_cats" WHERE id_match = $1
     `
 	err := r.dbConnector.DB.QueryRowContext(ctx, query, matchID).Scan(
-		&match.IdMatch, &match.IdUserCat, &match.IdMatchedCat)
+		&match.IdMatch, &match.IdUserCat, &match.IdMatchedCat, &match.ApprovedAt, &match.RejectedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return entity.MatchCat{}, errors.New("404: Match not found")
@@ -66,6 +66,29 @@ func (r MatchRepo) DeleteMatchByMatchId(ctx context.Context, matchID int) error 
 	query := `
 		DELETE FROM match_cats WHERE id_match = $1;
     `
+	res, err := r.dbConnector.DB.ExecContext(ctx, query, matchID)
+	if err != nil {
+		return msg.InternalServerError(err.Error())
+	}
+
+	rowEffect, err := res.RowsAffected()
+	if err != nil {
+		return msg.InternalServerError(err.Error())
+	}
+
+	if rowEffect == 0 {
+		return msg.NotFound("match request is not found")
+	}
+
+	return nil
+}
+
+func (r MatchRepo) RejectByMatchId(ctx context.Context, matchID int) error {
+	query := `
+		UPDATE match_cats SET rejected_at = NOW() 
+		WHERE match_id = $1
+		AND rejected_at IS NULL
+	`
 	res, err := r.dbConnector.DB.ExecContext(ctx, query, matchID)
 	if err != nil {
 		return msg.InternalServerError(err.Error())

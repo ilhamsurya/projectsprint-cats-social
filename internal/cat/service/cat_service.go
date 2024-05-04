@@ -7,6 +7,7 @@ import (
 	"projectsphere/cats-social/internal/cat/entity"
 	"projectsphere/cats-social/internal/cat/repository"
 	"projectsphere/cats-social/pkg/protocol/msg"
+	"strconv"
 	"strings"
 )
 
@@ -146,6 +147,81 @@ func (s CatService) validateCatParam(catParam entity.CatParam) error {
 			errorMsgs = append(errorMsgs, fmt.Sprintf("%s: %s", field, msg))
 		}
 		return fmt.Errorf(strings.Join(errorMsgs, "; "))
+	}
+
+	return nil
+}
+
+func (s CatService) Get(ctx context.Context, getCatParam entity.GetCatParam) ([]entity.GetCatData, error) {
+	var age = 0
+	var ageOperator = ""
+	if getCatParam.AgeInMonth != "" {
+		switch getCatParam.AgeInMonth[0:1] {
+		case ">":
+			ageOperator = ">"
+			val, err := strconv.Atoi(getCatParam.AgeInMonth[1:])
+			if err != nil {
+				ageOperator = ""
+			}
+			age = val
+		case "<":
+			ageOperator = "<"
+			val, err := strconv.Atoi(getCatParam.AgeInMonth[1:])
+			if err != nil {
+				ageOperator = ""
+			}
+			age = val
+		default:
+			ageOperator = "="
+			val, err := strconv.Atoi(getCatParam.AgeInMonth[0:])
+			if err != nil {
+				ageOperator = ""
+			}
+			age = val
+		}
+	}
+
+	cats, err := s.catRepo.GetCat(ctx, getCatParam, ageOperator, age)
+	if err != nil {
+		return []entity.GetCatData{}, err
+	}
+
+	var catRes = []entity.GetCatData{}
+	for _, v := range cats {
+		var images = []string{}
+		for _, ci := range v.CatImage {
+			images = append(images, ci.Image)
+		}
+
+		var hasMatched bool
+		for _, mc := range v.MatchCat {
+			if mc.IsMatched {
+				hasMatched = true
+				break
+			}
+		}
+
+		data := entity.GetCatData{
+			IdCat:       v.IdCat,
+			Name:        v.Name,
+			Race:        v.Race,
+			Sex:         v.Sex,
+			AgeInMonth:  v.AgeInMonth,
+			Description: v.Description,
+			ImageUrl:    images,
+			HasMatched:  hasMatched,
+			CreatedAt:   v.CreatedAt,
+		}
+		catRes = append(catRes, data)
+	}
+
+	return catRes, nil
+}
+
+func (s CatService) Delete(ctx context.Context, catID int, userID int) error {
+	err := s.catRepo.DeleteCat(ctx, catID, userID)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"projectsphere/cats-social/internal/cat/entity"
 	"projectsphere/cats-social/internal/cat/service"
+	"projectsphere/cats-social/pkg/middleware/auth"
 	"projectsphere/cats-social/pkg/protocol/msg"
 	"strconv"
 
@@ -101,4 +102,92 @@ func (h CatHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (h CatHandler) Get(c *gin.Context) {
+	id := c.Query("id")
+	limit := c.DefaultQuery("limit", "5")
+	offset := c.DefaultQuery("offset", "0")
+	race := c.Query("race")
+	sex := c.Query("sex")
+	hasMatched := c.Query("hasMatched")
+	ageInMonth := c.Query("ageInMonth")
+	owned := c.Query("owned")
+	search := c.Query("search")
+
+	idUser32, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	param := entity.GetCatParam{
+		IdUser:     int(idUser32), //need get user id from jwt
+		Race:       race,
+		Sex:        sex,
+		AgeInMonth: ageInMonth,
+		Search:     search,
+	}
+
+	idParam, err := strconv.Atoi(id)
+	if err == nil {
+		param.IdCat = &idParam
+	}
+
+	limitParam, err := strconv.Atoi(limit)
+	if err == nil {
+		param.Limit = &limitParam
+	}
+
+	offsetParam, err := strconv.Atoi(offset)
+	if err == nil {
+		param.Offset = &offsetParam
+	}
+
+	hasMatchedParam, err := strconv.ParseBool(hasMatched)
+	if err == nil {
+		param.HasMatched = &hasMatchedParam
+	}
+
+	hasOwned, err := strconv.ParseBool(owned)
+	if err == nil {
+		param.Owned = &hasOwned
+	}
+
+	resp, err := h.catSvc.Get(c.Request.Context(), param)
+	if err != nil {
+		respError := msg.UnwrapRespError(err)
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	c.JSON(http.StatusOK, msg.ReturnResult("success", resp))
+}
+
+func (h CatHandler) Delete(c *gin.Context) {
+	catID := c.Param("id")
+	userID, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if catID == "" {
+		c.JSON(http.StatusBadRequest, msg.BadRequest("cat ID is required"))
+		return
+	}
+
+	id, err := strconv.Atoi(catID)
+	if err != nil {
+		respError := msg.UnwrapRespError(msg.NotFound("id is not found"))
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	err = h.catSvc.Delete(c.Request.Context(), id, int(userID))
+	if err != nil {
+		respError := msg.UnwrapRespError(err)
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	c.JSON(http.StatusOK, msg.ReturnResult("successfully delete cat", nil))
 }

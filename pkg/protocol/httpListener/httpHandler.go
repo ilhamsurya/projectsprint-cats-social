@@ -69,6 +69,8 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 		cat.PUT("/:id", h.catHandler.Update) // PUT method for updating cat with ID
 		cat.POST("", h.catHandler.Create)
 		cat.POST("/match", h.matchHandler.Create)
+		cat.GET("", h.catHandler.Get)
+		cat.DELETE("/:id", h.catHandler.Delete)
 	}
 
 	return server

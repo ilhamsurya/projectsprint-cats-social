@@ -21,18 +21,19 @@ func NewCatRepo(dbConnector database.PostgresConnector) CatRepo {
 	}
 }
 
-func (r CatRepo) CreateCat(ctx context.Context, param entity.CatParam) (entity.Cat, error) {
+func (r CatRepo) CreateCat(ctx context.Context, param entity.CatParam, userId uint32) (entity.Cat, error) {
 	var cat entity.Cat
 	query := `
-        INSERT INTO "cats" (name, race, sex, age_in_month, description)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO "cats" (name, race, sex, age_in_month, description, id_user)
+        VALUES ($1, $2, $3, $4, $5, %6)
         RETURNING id_cat
     `
 	err := r.dbConnector.DB.QueryRow(query, param.Name,
 		param.Race,
 		param.Sex,
 		param.AgeInMonth,
-		param.Description).Scan(&cat.IdCat)
+		param.Description,
+		userId).Scan(&cat.IdCat)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

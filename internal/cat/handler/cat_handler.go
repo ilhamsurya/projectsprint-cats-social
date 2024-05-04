@@ -23,19 +23,15 @@ func NewCatHandler(catSvc service.CatService) CatHandler {
 }
 func (h CatHandler) Create(c *gin.Context) {
 
-	// Check if the header is missing
 	if c.GetHeader("Authorization") == "" {
 		c.JSON(http.StatusUnauthorized, msg.Unauthorization("No authorization header provided"))
 		return
 	}
 
-	// Check if the request body is empty
 	if c.Request.Body == nil {
 		c.JSON(http.StatusBadRequest, msg.BadRequest("Request body is empty"))
 		return
 	}
-
-	// Parse JSON payload
 	payload := new(entity.CatParam)
 	err := c.ShouldBindJSON(payload)
 	if err != nil {
@@ -43,14 +39,17 @@ func (h CatHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Check for null values in payload fields
+	userID, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	if containsNull(payload) {
 		c.JSON(http.StatusBadRequest, msg.BadRequest("JSON payload contains null values"))
 		return
 	}
 
-	// Call service to create cat
-	resp, err := h.catSvc.Create(c.Request.Context(), *payload)
+	resp, err := h.catSvc.Create(c.Request.Context(), *payload, userID)
 	if err != nil {
 		respError := msg.UnwrapRespError(err)
 		c.JSON(respError.Code, respError)

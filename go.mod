@@ -54,6 +54,7 @@ require (
 
 require (
 	github.com/gin-gonic/gin v1.9.1
+	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/spf13/viper v1.18.2

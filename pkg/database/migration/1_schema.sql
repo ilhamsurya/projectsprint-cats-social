@@ -36,7 +36,7 @@ CREATE TABLE "cat_images" (
 
 ALTER TABLE "cat_images" ADD FOREIGN KEY ("id_cat") REFERENCES "cats" ("id_cat");
 
-ALTER TABLE "cats" ADD FOREIGN KEY ("id_user") REFERENCES "user" ("id_user");
+ALTER TABLE "cats" ADD FOREIGN KEY ("id_user") REFERENCES "users" ("id_user");
 
 ALTER TABLE "match_cats" ADD FOREIGN KEY ("id_user_cat") REFERENCES "cats" ("id_cat");
 

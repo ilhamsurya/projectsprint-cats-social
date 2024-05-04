@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"projectsphere/cats-social/internal/cat/entity"
 	"projectsphere/cats-social/internal/cat/service"
+	"projectsphere/cats-social/pkg/middleware/auth"
 	"projectsphere/cats-social/pkg/protocol/msg"
 	"strconv"
 
@@ -114,8 +115,13 @@ func (h CatHandler) Get(c *gin.Context) {
 	owned := c.Query("owned")
 	search := c.Query("search")
 
+	idUser32, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	param := entity.GetCatParam{
-		IdUser:     1, //need get user id from jwt
+		IdUser:     int(idUser32), //need get user id from jwt
 		Race:       race,
 		Sex:        sex,
 		AgeInMonth: ageInMonth,
@@ -159,7 +165,10 @@ func (h CatHandler) Get(c *gin.Context) {
 
 func (h CatHandler) Delete(c *gin.Context) {
 	catID := c.Param("id")
-	userID := 3 //need get user id from jwt
+	userID, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	if catID == "" {
 		c.JSON(http.StatusBadRequest, msg.BadRequest("cat ID is required"))
@@ -173,7 +182,7 @@ func (h CatHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	err = h.catSvc.Delete(c.Request.Context(), id, userID)
+	err = h.catSvc.Delete(c.Request.Context(), id, int(userID))
 	if err != nil {
 		respError := msg.UnwrapRespError(err)
 		c.JSON(respError.Code, respError)

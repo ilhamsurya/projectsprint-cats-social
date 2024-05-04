@@ -184,17 +184,25 @@ func (r CatRepo) IsUserCatAssociationValid(ctx context.Context, userID, catID in
 }
 
 func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperator string, age int) ([]entity.Cat, error) {
+	// query := `
+	// 	SELECT
+	// 		c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description,
+	// 		ci.id_image, ci.id_cat, ci.image,
+	// 		mc.id_match, mc.is_matched
+	// 	FROM "cats" c
+	// 	JOIN "cat_images" ci ON ci.id_cat = c.id_cat
+	// 	JOIN "users" u ON u.id_user = c.id_user
+	// 	LEFT JOIN "match_cats" mc ON mc.id_user_cat = c.id_cat
+	// 	WHERE c.deleted_at IS NULL
+	// `
+
 	query := `
 		SELECT 
-			c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description, 
-			ci.id_image, ci.id_cat, ci.image, 
-			mc.id_match, mc.is_matched
-		FROM "cats" c
-		JOIN "cat_images" ci ON ci.id_cat = c.id_cat 
-		JOIN "users" u ON u.id_user = c.id_user
-		LEFT JOIN "match_cats" mc ON mc.id_user_cat = c.id_cat
+			c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description, c.id_user, c.deleted_at
+		FROM "cats" as c
 		WHERE c.deleted_at IS NULL 
 	`
+
 	args := []interface{}{}
 	argsCount := 1
 
@@ -226,17 +234,6 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		fmt.Println(&param.IdUser)
 		argsCount++
 	}
-	if param.HasMatched != nil {
-		if *param.HasMatched {
-			query += fmt.Sprintf(" AND mc.is_matched = $%d", argsCount)
-			args = append(args, &param.HasMatched)
-			argsCount++
-		} else {
-			query += fmt.Sprintf(" AND (mc.is_matched = $%d OR mc.is_matched IS NULL)", argsCount)
-			args = append(args, &param.HasMatched)
-			argsCount++
-		}
-	}
 	if param.Sex != "" {
 		query += fmt.Sprintf(" AND c.sex = $%d", argsCount)
 		args = append(args, &param.Sex)
@@ -248,21 +245,43 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		argsCount++
 	}
 
-	// if param.Limit != nil {
-	// 	query += fmt.Sprintf(" LIMIT $%d", argsCount)
-	// 	args = append(args, *param.Limit)
-	// 	argsCount++
-	// }
+	if param.Limit != nil {
+		query += fmt.Sprintf(" LIMIT $%d", argsCount)
+		args = append(args, *param.Limit)
+		argsCount++
+	}
 
-	// if param.Offset != nil {
-	// 	query += fmt.Sprintf(" OFFSET $%d", argsCount)
-	// 	args = append(args, &param.Offset)
-	// 	argsCount++
-	// }
+	if param.Offset != nil {
+		query += fmt.Sprintf(" OFFSET $%d", argsCount)
+		args = append(args, &param.Offset)
+		argsCount++
+	}
 
-	// fmt.Println(query)
+	dataQuery := fmt.Sprintf(`
+		SELECT 
+			dc.id_cat, dc.name, dc.race, dc.sex, dc.age_in_month, dc.description, 
+			ci.id_image, ci.id_cat, ci.image, 
+			mc.id_match, mc.approved_at
+		FROM (%s) dc
+		JOIN "cat_images" ci ON ci.id_cat = dc.id_cat 
+		JOIN "users" u ON u.id_user = dc.id_user
+		LEFT JOIN "match_cats" mc ON mc.id_user_cat = dc.id_cat
+		WHERE dc.deleted_at IS NULL 
+	`, query)
 
-	rows, err := r.dbConnector.DB.QueryContext(ctx, query, args...)
+	if param.HasMatched != nil {
+		if *param.HasMatched {
+			query += fmt.Sprintf(" AND c.approved_at = $%d", argsCount)
+			args = append(args, &param.HasMatched)
+			argsCount++
+		} else {
+			query += fmt.Sprintf(" AND (mc.approved_at = $%d OR mc.approved_at IS NULL)", argsCount)
+			args = append(args, &param.HasMatched)
+			argsCount++
+		}
+	}
+
+	rows, err := r.dbConnector.DB.QueryContext(ctx, dataQuery, args...)
 	if err != nil {
 		return []entity.Cat{}, msg.InternalServerError(err.Error())
 	}
@@ -307,12 +326,6 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 	for _, cat := range catsMap {
 		cats = append(cats, cat)
 	}
-
-	// rs, err := json.MarshalIndent(cats, "", " ")
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-	// fmt.Print(string(rs))
 
 	return cats, nil
 }

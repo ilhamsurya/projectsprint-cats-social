@@ -27,7 +27,7 @@ CREATE TABLE "match_cats" (
   "id_user_cat" integer,
   "id_matched_cat" integer,
   "created_at" timestamp DEFAULT CURRENT_TIMESTAMP,
-  "approved_at" timestamp NULL DEFAULT NULL
+  "approved_at" timestamp NULL DEFAULT NULL,
   "rejected_at" timestamp NULL DEFAULT NULL
 );
 

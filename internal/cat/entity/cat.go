@@ -91,7 +91,7 @@ type GetCatData struct {
 	Sex         string    `json:"sex"`
 	AgeInMonth  int       `json:"ageInMonth"`
 	Description string    `json:"description"`
-	ImageUrl    []string  `json:"imageUrl"`
+	ImageUrl    []string  `json:"imageUrls"`
 	HasMatched  bool      `json:"hasMatched"`
 	CreatedAt   time.Time `json:"createdAt"`
 }

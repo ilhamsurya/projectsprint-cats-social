@@ -113,3 +113,31 @@ func (s MatchService) Delete(ctx context.Context, matchID int, userID int) error
 
 	return nil
 }
+
+func (s MatchService) RejectMatchRequest(ctx context.Context, matchParam entity.ProcessMatchRequest, userID int) error {
+
+	//Get Match Info
+	match, err := s.matchRepo.GetMatchByID(ctx, int(matchParam.MatchId))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	// Fetch the cat information
+	matchCat, err := s.catRepo.GetCatByID(ctx, int(match.IdMatchedCat))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	// Check if userCatId belongs to the user
+	if matchCat.IdUser != uint32(userID) {
+		return msg.Unauthorization("either cat or match request don't belong to user")
+	}
+
+	// Delete the match
+	err = s.matchRepo.DeleteMatchByMatchId(ctx, int(matchParam.MatchId))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	return nil
+}

@@ -21,7 +21,7 @@ func NewCatService(catRepo repository.CatRepo) CatService {
 	}
 }
 
-func (s CatService) Create(ctx context.Context, catParam entity.CatParam) (entity.CreateCatResponse, error) {
+func (s CatService) Create(ctx context.Context, catParam entity.CatParam, userId uint32) (entity.CreateCatResponse, error) {
 	// Validate cat parameters
 	if err := s.validateCatParam(catParam); err != nil {
 		return entity.CreateCatResponse{}, &msg.RespError{
@@ -31,7 +31,7 @@ func (s CatService) Create(ctx context.Context, catParam entity.CatParam) (entit
 	}
 
 	// Create the cat
-	cat, err := s.catRepo.CreateCat(ctx, catParam)
+	cat, err := s.catRepo.CreateCat(ctx, catParam, userId)
 	if err != nil {
 		return entity.CreateCatResponse{}, err
 	}

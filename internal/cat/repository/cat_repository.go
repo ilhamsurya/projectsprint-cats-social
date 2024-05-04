@@ -21,18 +21,19 @@ func NewCatRepo(dbConnector database.PostgresConnector) CatRepo {
 	}
 }
 
-func (r CatRepo) CreateCat(ctx context.Context, param entity.CatParam) (entity.Cat, error) {
+func (r CatRepo) CreateCat(ctx context.Context, param entity.CatParam, userId uint32) (entity.Cat, error) {
 	var cat entity.Cat
 	query := `
-        INSERT INTO "cats" (name, race, sex, age_in_month, description)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO "cats" (name, race, sex, age_in_month, description,id_user)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id_cat
     `
+
 	err := r.dbConnector.DB.QueryRow(query, param.Name,
 		param.Race,
 		param.Sex,
 		param.AgeInMonth,
-		param.Description).Scan(&cat.IdCat)
+		param.Description, int(userId)).Scan(&cat.IdCat)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -97,7 +98,7 @@ func (r CatRepo) UpdateCat(ctx context.Context, catID int, catParam entity.CatPa
 
 	// Scan the updated cat from the database row
 	var updatedCat entity.Cat
-	err := row.Scan(&updatedCat.IdCat, &updatedCat.Name, &updatedCat.Race, &updatedCat.Sex, &updatedCat.AgeInMonth, &updatedCat.Description, &updatedCat.HasMatched, &updatedCat.CreatedAt, &updatedCat.UpdatedAt)
+	err := row.Scan(&updatedCat.IdCat, &updatedCat.Name, &updatedCat.Race, &updatedCat.Sex, &updatedCat.AgeInMonth, &updatedCat.Description, &updatedCat.CreatedAt, &updatedCat.UpdatedAt)
 	if err != nil {
 		return entity.Cat{}, err
 	}
@@ -128,7 +129,7 @@ func (r CatRepo) GetCatByID(ctx context.Context, catID int) (entity.Cat, error) 
         FROM "cats" WHERE id_cat = $1
     `
 	err := r.dbConnector.DB.QueryRowContext(ctx, query, catID).Scan(
-		&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &cat.HasMatched)
+		&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return entity.Cat{}, errors.New("404: Cat not found")
@@ -293,8 +294,8 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		var cat = entity.Cat{}
 		var image = entity.CatImage{}
 		var idMatch *uint32
-		var approvedAt *sql.NullTime
-		var err = rows.Scan(&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &image.IdImage, &image.IdCat, &image.Image, &idMatch, &approvedAt)
+		var isMatched *bool
+		var err = rows.Scan(&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &image.IdImage, &image.IdCat, &image.Image, &idMatch, &isMatched)
 
 		if err != nil {
 			return []entity.Cat{}, msg.InternalServerError(err.Error())
@@ -317,7 +318,7 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		}
 		catTemp.CatImage = append(catTemp.CatImage, image)
 		if idMatch != nil {
-			catTemp.MatchCat = append(catTemp.MatchCat, entity.MatchCat{IdMatch: *idMatch, ApprovedAt: *approvedAt})
+			catTemp.MatchCat = append(catTemp.MatchCat, entity.MatchCat{IdMatch: *idMatch, IsMatched: *isMatched})
 		}
 		catsMap[int(cat.IdCat)] = catTemp
 	}

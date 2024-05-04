@@ -133,7 +133,7 @@ func (s MatchService) RejectMatchRequest(ctx context.Context, matchParam entity.
 		return msg.BadRequest(err.Error())
 	}
 
-	// Check if userCatId belongs to the user
+	// Check if matchCatId belongs to the user
 	if matchCat.IdUser != uint32(userID) {
 		return msg.Unauthorization("either cat or match request don't belong to user")
 	}
@@ -145,6 +145,44 @@ func (s MatchService) RejectMatchRequest(ctx context.Context, matchParam entity.
 
 	// Delete the match
 	err = s.matchRepo.RejectByMatchId(ctx, int(matchParam.MatchId))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	return nil
+}
+
+func (s MatchService) ApproveMatchRequest(ctx context.Context, matchParam entity.ProcessMatchRequest, userID int) error {
+
+	//Get Match Info
+	match, err := s.matchRepo.GetMatchByID(ctx, int(matchParam.MatchId))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	// Fetch the cat information
+	matchCat, err := s.catRepo.GetCatByID(ctx, int(match.IdMatchedCat))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	// Check if matchCatId belongs to the user
+	if matchCat.IdUser != uint32(userID) {
+		return msg.Unauthorization("either cat or match request don't belong to user")
+	}
+
+	//Check if match already processed
+	if match.ApprovedAt.Valid || match.RejectedAt.Valid {
+		return msg.BadRequest("matchId is no longer valid")
+	}
+
+	// Approve the match request
+	err = s.matchRepo.ApproveByMatchId(ctx, int(matchParam.MatchId))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	err = s.matchRepo.DeleteMatchByApprove(ctx, match)
 	if err != nil {
 		return msg.BadRequest(err.Error())
 	}

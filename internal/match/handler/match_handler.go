@@ -117,3 +117,45 @@ func (h MatchHandler) RejectMatchRequest(c *gin.Context) {
 
 	c.JSON(http.StatusOK, msg.ReturnResult("successfully reject the cat match request", nil))
 }
+
+func (h MatchHandler) ApproveMatchRequest(c *gin.Context) {
+	// Check if the header is missing
+	if c.GetHeader("Authorization") == "" {
+		c.JSON(http.StatusUnauthorized, msg.Unauthorization("No authorization header provided"))
+		return
+	}
+
+	// Check if the request body is empty
+	if c.Request.Body == nil {
+		c.JSON(http.StatusBadRequest, msg.BadRequest("Request body is empty"))
+		return
+	}
+
+	// Parse JSON payload
+	payload := new(entity.ProcessMatchRequest)
+	err := c.ShouldBindJSON(payload)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, msg.BadRequest(err.Error()))
+		return
+	}
+
+	// Check for null values in payload fields
+	if payload.MatchId == 0 {
+		c.JSON(http.StatusBadRequest, msg.BadRequest("JSON payload contains null values"))
+		return
+	}
+
+	userID, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = h.matchSvc.RejectMatchRequest(c.Request.Context(), *payload, int(userID))
+	if err != nil {
+		respError := msg.UnwrapRespError(err)
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	c.JSON(http.StatusOK, msg.ReturnResult("successfully approve the cat match request", nil))
+}

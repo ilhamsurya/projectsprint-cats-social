@@ -96,7 +96,7 @@ func (r CatRepo) UpdateCat(ctx context.Context, catID int, catParam entity.CatPa
 
 	// Scan the updated cat from the database row
 	var updatedCat entity.Cat
-	err := row.Scan(&updatedCat.IdCat, &updatedCat.Name, &updatedCat.Race, &updatedCat.Sex, &updatedCat.AgeInMonth, &updatedCat.Description, &updatedCat.CreatedAt, &updatedCat.UpdatedAt)
+	err := row.Scan(&updatedCat.IdCat, &updatedCat.Name, &updatedCat.Race, &updatedCat.Sex, &updatedCat.AgeInMonth, &updatedCat.Description, &updatedCat.HasMatched, &updatedCat.CreatedAt, &updatedCat.UpdatedAt)
 	if err != nil {
 		return entity.Cat{}, err
 	}
@@ -127,7 +127,7 @@ func (r CatRepo) GetCatByID(ctx context.Context, catID int) (entity.Cat, error) 
         FROM "cats" WHERE id_cat = $1
     `
 	err := r.dbConnector.DB.QueryRowContext(ctx, query, catID).Scan(
-		&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description)
+		&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &cat.HasMatched)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return entity.Cat{}, errors.New("404: Cat not found")

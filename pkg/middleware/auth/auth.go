@@ -59,7 +59,7 @@ func (j JWTAuth) TokenValid(c *gin.Context) (uint32, error) {
 	tokenString := ExtractToken(c)
 	if tokenString == "" {
 		return 0, &msg.RespError{
-			Code:    http.StatusBadRequest,
+			Code:    http.StatusUnauthorized,
 			Message: msg.ErrTokenNotFound,
 		}
 	}

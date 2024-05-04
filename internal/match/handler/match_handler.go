@@ -23,15 +23,22 @@ func NewMatchHandler(matchSvc service.MatchService) MatchHandler {
 }
 
 func (h MatchHandler) Create(c *gin.Context) {
-	payload := new(entity.MatchCat)
 
+	if c.Request.Body == nil {
+		c.JSON(http.StatusBadRequest, msg.BadRequest("Request body is empty"))
+		return
+	}
+
+	payload := new(entity.MatchCat)
 	err := c.ShouldBindJSON(payload)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, msg.BadRequest(err.Error()))
 		return
 	}
 
+	fmt.Print("ini payload", payload)
 	resp, err := h.matchSvc.Create(c.Request.Context(), *payload)
+
 	if err != nil {
 		respError := msg.UnwrapRespError(err)
 		c.JSON(respError.Code, respError)

@@ -71,8 +71,9 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 		cat.POST("/match", h.matchHandler.Create)
 		cat.GET("", h.catHandler.Get)
 		cat.DELETE("/:id", h.catHandler.Delete)
-		cat.DELETE("/match/:id", h.matchHandler.Delete)              // Delete match request with match ID
-		cat.POST("/match/reject", h.matchHandler.RejectMatchRequest) // Delete match request with match ID
+		cat.DELETE("/match/:id", h.matchHandler.Delete)                // Delete match request with match ID
+		cat.POST("/match/reject", h.matchHandler.RejectMatchRequest)   // Delete match request with match ID
+		cat.POST("/match/approve", h.matchHandler.ApproveMatchRequest) // Delete match request with match ID
 	}
 
 	return server

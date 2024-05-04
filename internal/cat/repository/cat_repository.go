@@ -114,7 +114,7 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		JOIN "cat_image" ci ON ci.id_cat = c.id_cat 
 		JOIN "user" u ON u.id_user = c.id_user
 		LEFT JOIN "match_cat" mc ON mc.id_user_cat = c.id_cat
-		WHERE 1=1
+		WHERE c.deleted_at IS NULL 
 	`
 	args := []interface{}{}
 	argsCount := 1
@@ -236,4 +236,29 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 	// fmt.Print(string(rs))
 
 	return cats, nil
+}
+
+func (r CatRepo) DeleteCat(ctx context.Context, catID int, userID int) error {
+	query := `
+		UPDATE cat SET deleted_at = NOW() 
+		WHERE id_cat = $1 
+		AND id_user = $2
+		AND deleted_at IS NULL
+	`
+
+	res, err := r.dbConnector.DB.ExecContext(ctx, query, catID, userID)
+	if err != nil {
+		return msg.InternalServerError(err.Error())
+	}
+
+	rowEffect, err := res.RowsAffected()
+	if err != nil {
+		return msg.InternalServerError(err.Error())
+	}
+
+	if rowEffect == 0 {
+		return msg.NotFound("id is not found")
+	}
+
+	return nil
 }

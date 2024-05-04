@@ -73,6 +73,7 @@ func AddUserRouter(
 		cat.PUT("/:id", catHandler.Update) // PUT method for updating cat with ID
 		cat.POST("", catHandler.Create)
 		cat.GET("", catHandler.Get)
+		cat.DELETE("/:id", catHandler.Delete)
 	}
 
 	// user.Use(auth.JwtAuthUserMiddleware())

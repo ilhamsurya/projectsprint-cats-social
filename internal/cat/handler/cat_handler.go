@@ -83,7 +83,7 @@ func (h CatHandler) Get(c *gin.Context) {
 	search := c.Query("search")
 
 	param := entity.GetCatParam{
-		IdUser:     1,
+		IdUser:     1, //need get user id from jwt
 		Race:       race,
 		Sex:        sex,
 		AgeInMonth: ageInMonth,
@@ -123,4 +123,30 @@ func (h CatHandler) Get(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, msg.ReturnResult("success", resp))
+}
+
+func (h CatHandler) Delete(c *gin.Context) {
+	catID := c.Param("id")
+	userID := 3 //need get user id from jwt
+
+	if catID == "" {
+		c.JSON(http.StatusBadRequest, msg.BadRequest("cat ID is required"))
+		return
+	}
+
+	id, err := strconv.Atoi(catID)
+	if err != nil {
+		respError := msg.UnwrapRespError(msg.NotFound("id is not found"))
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	err = h.catSvc.Delete(c.Request.Context(), id, userID)
+	if err != nil {
+		respError := msg.UnwrapRespError(err)
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	c.JSON(http.StatusOK, msg.ReturnResult("successfully delete cat", nil))
 }

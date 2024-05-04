@@ -21,7 +21,8 @@ CREATE TABLE "cat" (
   "age_in_month" int,
   "description" varchar,
   "created_at" timestamp DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP
+  "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP,
+  "deleted_at" timestamp NULL DEFAULT NULL
 );
 
 CREATE TABLE "match_cat" (

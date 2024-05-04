@@ -197,3 +197,12 @@ func (s CatService) Get(ctx context.Context, getCatParam entity.GetCatParam) ([]
 
 	return catRes, nil
 }
+
+func (s CatService) Delete(ctx context.Context, catID int, userID int) error {
+	err := s.catRepo.DeleteCat(ctx, catID, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

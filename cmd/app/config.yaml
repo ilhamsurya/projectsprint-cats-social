@@ -1,6 +1,6 @@
 APPLICATION:
   PORT: 8080
-  GROUP: api/v1/
+  GROUP: v1/
 DB:
   POSTGRE:
     HOST: 0.0.0.0
@@ -10,8 +10,9 @@ DB:
     PASSWORD: 4j2kxetmuPIK
     PARAMS: "sslmode=disable"
 AUTH:
-  JWT_SECRET:
-  ACCESS_TOKEN_EXPIRED_TIME: 15m
+  JWT_SECRET: Kkslskkwokwkswojwnwjiji
+  # 8 houre in minute
+  ACCESS_TOKEN_EXPIRED_TIME: 480
   REFRESH_TOKEN_EXPIRED_TIME: 5h
   COOKIE_SECRET:
   BCRYPT_SALT: 8

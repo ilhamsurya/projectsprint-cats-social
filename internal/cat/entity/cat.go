@@ -64,6 +64,11 @@ type UpdateCatData struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+type UserCat struct {
+	UserID int `json:"user_id"`
+	CatID  int `json:"cat_id"`
+}
+
 type GetCatParam struct {
 	IdUser     int    `json:"id_user"`
 	IdCat      *int   `json:"id"`

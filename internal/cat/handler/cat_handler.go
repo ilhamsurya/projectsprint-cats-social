@@ -20,16 +20,35 @@ func NewCatHandler(catSvc service.CatService) CatHandler {
 		catSvc: catSvc,
 	}
 }
-
 func (h CatHandler) Create(c *gin.Context) {
-	payload := new(entity.CatParam)
 
+	// Check if the header is missing
+	if c.GetHeader("Authorization") == "" {
+		c.JSON(http.StatusUnauthorized, msg.Unauthorization("No authorization header provided"))
+		return
+	}
+
+	// Check if the request body is empty
+	if c.Request.Body == nil {
+		c.JSON(http.StatusBadRequest, msg.BadRequest("Request body is empty"))
+		return
+	}
+
+	// Parse JSON payload
+	payload := new(entity.CatParam)
 	err := c.ShouldBindJSON(payload)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, msg.BadRequest(err.Error()))
 		return
 	}
 
+	// Check for null values in payload fields
+	if containsNull(payload) {
+		c.JSON(http.StatusBadRequest, msg.BadRequest("JSON payload contains null values"))
+		return
+	}
+
+	// Call service to create cat
 	resp, err := h.catSvc.Create(c.Request.Context(), *payload)
 	if err != nil {
 		respError := msg.UnwrapRespError(err)
@@ -38,6 +57,19 @@ func (h CatHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, resp)
+}
+
+// containsNull checks if any field in the CatParam struct is null
+func containsNull(param *entity.CatParam) bool {
+	if param == nil {
+		return false
+	}
+
+	// Check each field for null
+	if param.Name == "" || param.Race == "" || param.AgeInMonth <= 0 {
+		return true
+	}
+	return false
 }
 
 func (h CatHandler) Update(c *gin.Context) {

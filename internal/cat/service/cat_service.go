@@ -71,6 +71,26 @@ func (s CatService) validateCatParam(catParam entity.CatParam) error {
 	// Map to store validation errors
 	validationErrors := make(map[string]string)
 
+	// Check for null values
+	if catParam.Name == "" {
+		validationErrors["name"] = "name cannot be empty"
+	}
+	if catParam.Race == "" {
+		validationErrors["race"] = "race cannot be empty"
+	}
+	if catParam.Sex == "" {
+		validationErrors["sex"] = "sex cannot be empty"
+	}
+	if catParam.AgeInMonth == 0 {
+		validationErrors["ageInMonth"] = "ageInMonth cannot be empty"
+	}
+	if catParam.Description == "" {
+		validationErrors["description"] = "description cannot be empty"
+	}
+	if len(catParam.ImageURLs) == 0 {
+		validationErrors["imageUrls"] = "imageUrls cannot be empty"
+	}
+
 	// Validate name if not empty
 	if catParam.Name != "" && len(catParam.Name) > 30 {
 		validationErrors["name"] = "name must be between 1 and 30 characters"

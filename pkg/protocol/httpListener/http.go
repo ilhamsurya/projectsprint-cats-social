@@ -8,10 +8,14 @@ import (
 	catHandler "projectsphere/cats-social/internal/cat/handler"
 	catRepository "projectsphere/cats-social/internal/cat/repository"
 	catService "projectsphere/cats-social/internal/cat/service"
+	matchHandler "projectsphere/cats-social/internal/match/handler"
+	matchRepository "projectsphere/cats-social/internal/match/repository"
+	matchService "projectsphere/cats-social/internal/match/service"
 	userHandler "projectsphere/cats-social/internal/user/handler"
 	userRepository "projectsphere/cats-social/internal/user/repository"
 	userService "projectsphere/cats-social/internal/user/service"
 	"projectsphere/cats-social/pkg/database"
+	"projectsphere/cats-social/pkg/middleware/auth"
 	"projectsphere/cats-social/pkg/utils/config"
 
 	"github.com/gin-gonic/gin"
@@ -65,7 +69,8 @@ func Start() *HttpImpl {
 
 	db, err := sqlx.Connect("postgres", fmt.Sprintf("postgresql://%s:%s@%s:%v/%s?%s", config.DB.Postgre.User, config.DB.Postgre.Pass, config.DB.Postgre.Host, config.DB.Postgre.Port, config.DB.Postgre.Name, config.DB.Postgre.Params))
 	if err != nil {
-		log.Error().Msg(err.Error())
+		// without db we can't do anything so should be aware if we can't connect
+		panic(err.Error())
 	}
 	postgresConnector := database.NewPostgresConnector(context.TODO(), db)
 
@@ -73,13 +78,26 @@ func Start() *HttpImpl {
 	catSvc := catService.NewCatService(catRepo)
 	catHandler := catHandler.NewCatHandler(catSvc)
 
+	matchRepo := matchRepository.NewMatchRepo(postgresConnector)
+	matchSvc := matchService.NewMatchService(matchRepo, catRepo)
+	matchhandler := matchHandler.NewMatchHandler(matchSvc)
+
 	userRepo := userRepository.NewUserRepo(postgresConnector)
-	userSvc := userService.NewUserService(userRepo)
+
+	jwtAuth := auth.NewJwtAuth(
+		config.Auth.AccessTokenExpiredTime,
+		config.Auth.SecretKey,
+		userRepo.IsUserExist,
+	)
+
+	userSvc := userService.NewUserService(userRepo, config.Auth.BcryptSalt, jwtAuth)
 	userHandler := userHandler.NewUserHandler(userSvc)
 
 	httpHandlerImpl := NewHttpHandler(
 		userHandler,
 		catHandler,
+		matchhandler,
+		jwtAuth,
 	)
 	httpRouterImpl := NewHttpRoute(httpHandlerImpl)
 	httpImpl := NewHttpProtocol(httpRouterImpl)

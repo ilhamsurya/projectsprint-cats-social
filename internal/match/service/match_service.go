@@ -189,3 +189,63 @@ func (s MatchService) ApproveMatchRequest(ctx context.Context, matchParam entity
 
 	return nil
 }
+
+func (s MatchService) GetMatchRequest(ctx context.Context, userID int) ([]entity.DataDetail, error) {
+	res, err := s.matchRepo.GetMatchRequest(ctx, userID)
+	if err != nil {
+		return []entity.DataDetail{}, msg.InternalServerError(err.Error())
+	}
+
+	dataDetails := []entity.DataDetail{}
+
+	for _, v := range res {
+		hasMatched := false
+		if v.ApprovedAt.Valid {
+			hasMatched = true
+		}
+
+		data := entity.DataDetail{
+			ID: int(v.IdMatch),
+			IssuedBy: entity.IssuedBy{
+				Name:      v.UserCat.User.Name,
+				Email:     v.UserCat.User.Email,
+				CreatedAt: v.UserCat.CreatedAt,
+			},
+			UserCatDetail: entity.CatDetail{
+				ID:          int(v.UserCat.IdCat),
+				Name:        v.UserCat.Name,
+				Race:        v.UserCat.Race,
+				Sex:         v.UserCat.Sex,
+				Description: v.UserCat.Description,
+				AgeInMonth:  v.UserCat.AgeInMonth,
+				CreatedAt:   v.CreatedAt,
+				HasMatched:  hasMatched,
+				ImageUrls:   make([]string, 0),
+			},
+			MatchCatDetail: entity.CatDetail{
+				ID:          int(v.MatchedCat.IdCat),
+				Name:        v.MatchedCat.Name,
+				Race:        v.MatchedCat.Race,
+				Sex:         v.MatchedCat.Sex,
+				Description: v.MatchedCat.Description,
+				AgeInMonth:  v.MatchedCat.AgeInMonth,
+				CreatedAt:   v.CreatedAt,
+				HasMatched:  hasMatched,
+				ImageUrls:   make([]string, 0),
+			},
+			CreatedAt: v.CreatedAt,
+		}
+
+		for _, imgU := range v.UserCat.CatImage {
+			data.UserCatDetail.ImageUrls = append(data.UserCatDetail.ImageUrls, imgU.Image)
+		}
+
+		for _, imgM := range v.MatchedCat.CatImage {
+			data.MatchCatDetail.ImageUrls = append(data.MatchCatDetail.ImageUrls, imgM.Image)
+		}
+
+		dataDetails = append(dataDetails, data)
+	}
+
+	return dataDetails, nil
+}

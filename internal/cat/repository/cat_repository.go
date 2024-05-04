@@ -271,13 +271,9 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 
 	if param.HasMatched != nil {
 		if *param.HasMatched {
-			query += fmt.Sprintf(" AND c.approved_at = $%d", argsCount)
-			args = append(args, &param.HasMatched)
-			argsCount++
+			dataQuery += " AND mc.approved_at IS NOT NULL"
 		} else {
-			query += fmt.Sprintf(" AND (mc.approved_at = $%d OR mc.approved_at IS NULL)", argsCount)
-			args = append(args, &param.HasMatched)
-			argsCount++
+			dataQuery += " AND (mc.rejected_at IS NULL AND mc.approved_at IS NULL)"
 		}
 	}
 
@@ -294,8 +290,12 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		var cat = entity.Cat{}
 		var image = entity.CatImage{}
 		var idMatch *uint32
-		var isMatched *bool
-		var err = rows.Scan(&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &image.IdImage, &image.IdCat, &image.Image, &idMatch, &isMatched)
+		var approvedAt sql.NullTime
+		var err = rows.Scan(
+			&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description,
+			&image.IdImage, &image.IdCat, &image.Image,
+			&idMatch, &approvedAt,
+		)
 
 		if err != nil {
 			return []entity.Cat{}, msg.InternalServerError(err.Error())
@@ -318,7 +318,7 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		}
 		catTemp.CatImage = append(catTemp.CatImage, image)
 		if idMatch != nil {
-			catTemp.MatchCat = append(catTemp.MatchCat, entity.MatchCat{IdMatch: *idMatch, IsMatched: *isMatched})
+			catTemp.MatchCat = append(catTemp.MatchCat, entity.MatchCat{IdMatch: *idMatch, ApprovedAt: approvedAt})
 		}
 		catsMap[int(cat.IdCat)] = catTemp
 	}

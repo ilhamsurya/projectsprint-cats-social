@@ -185,9 +185,9 @@ func (r CatRepo) IsUserCatAssociationValid(ctx context.Context, userID, catID in
 func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperator string, age int) ([]entity.Cat, error) {
 	query := `
 		SELECT 
-			c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description, 
+			c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description, c.has_matched,
 			ci.id_image, ci.id_cat, ci.image, 
-			mc.id_match, mc.is_matched
+			mc.id_match
 		FROM "cats" c
 		JOIN "cat_images" ci ON ci.id_cat = c.id_cat 
 		JOIN "users" u ON u.id_user = c.id_user
@@ -227,11 +227,11 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 	}
 	if param.HasMatched != nil {
 		if *param.HasMatched {
-			query += fmt.Sprintf(" AND mc.is_matched = $%d", argsCount)
+			query += fmt.Sprintf(" AND c.has_matched = $%d", argsCount)
 			args = append(args, &param.HasMatched)
 			argsCount++
 		} else {
-			query += fmt.Sprintf(" AND (mc.is_matched = $%d OR mc.is_matched IS NULL)", argsCount)
+			query += fmt.Sprintf(" AND (c.has_matched = $%d OR c.has_matched IS NULL)", argsCount)
 			args = append(args, &param.HasMatched)
 			argsCount++
 		}

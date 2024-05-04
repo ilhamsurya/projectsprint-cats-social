@@ -10,7 +10,8 @@ type MatchCat struct {
 	IdUserCat    uint32       `db:"id_user_cat" json:"id_user_cat"`
 	IdMatchedCat uint32       `db:"id_matched_cat" json:"id_matched_cat"`
 	CreatedAt    time.Time    `db:"created_at" json:"created_at"`
-	UpdatedAt    sql.NullTime `db:"updated_at" json:"updated_at"`
+	ApprovedAt   sql.NullTime `db:"approved_at" json:"approved_at"`
+	RejectedAt   sql.NullTime `db:"rejected_at" json:"rejected_at"`
 }
 
 type MatchCatRequest struct {

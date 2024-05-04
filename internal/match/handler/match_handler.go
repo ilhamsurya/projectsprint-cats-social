@@ -115,5 +115,5 @@ func (h MatchHandler) RejectMatchRequest(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, msg.ReturnResult("successfully delete match request", nil))
+	c.JSON(http.StatusOK, msg.ReturnResult("successfully reject the cat match request", nil))
 }

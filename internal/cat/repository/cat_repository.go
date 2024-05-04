@@ -185,9 +185,9 @@ func (r CatRepo) IsUserCatAssociationValid(ctx context.Context, userID, catID in
 func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperator string, age int) ([]entity.Cat, error) {
 	query := `
 		SELECT 
-			c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description, c.has_matched,
+			c.id_cat, c.name, c.race, c.sex, c.age_in_month, c.description,
 			ci.id_image, ci.id_cat, ci.image, 
-			mc.id_match
+			mc.id_match, mc.approved_at
 		FROM "cats" c
 		JOIN "cat_images" ci ON ci.id_cat = c.id_cat 
 		JOIN "users" u ON u.id_user = c.id_user
@@ -227,11 +227,11 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 	}
 	if param.HasMatched != nil {
 		if *param.HasMatched {
-			query += fmt.Sprintf(" AND c.has_matched = $%d", argsCount)
+			query += fmt.Sprintf(" AND c.approved_at = $%d", argsCount)
 			args = append(args, &param.HasMatched)
 			argsCount++
 		} else {
-			query += fmt.Sprintf(" AND (c.has_matched = $%d OR c.has_matched IS NULL)", argsCount)
+			query += fmt.Sprintf(" AND (c.approved_at = $%d OR c.approved_at IS NULL)", argsCount)
 			args = append(args, &param.HasMatched)
 			argsCount++
 		}
@@ -274,8 +274,8 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		var cat = entity.Cat{}
 		var image = entity.CatImage{}
 		var idMatch *uint32
-		var isMatched *bool
-		var err = rows.Scan(&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &image.IdImage, &image.IdCat, &image.Image, &idMatch, &isMatched)
+		var approvedAt *sql.NullTime
+		var err = rows.Scan(&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description, &image.IdImage, &image.IdCat, &image.Image, &idMatch, &approvedAt)
 
 		if err != nil {
 			return []entity.Cat{}, msg.InternalServerError(err.Error())
@@ -298,7 +298,7 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		}
 		catTemp.CatImage = append(catTemp.CatImage, image)
 		if idMatch != nil {
-			catTemp.MatchCat = append(catTemp.MatchCat, entity.MatchCat{IdMatch: *idMatch, IsMatched: *isMatched})
+			catTemp.MatchCat = append(catTemp.MatchCat, entity.MatchCat{IdMatch: *idMatch, ApprovedAt: *approvedAt})
 		}
 		catsMap[int(cat.IdCat)] = catTemp
 	}

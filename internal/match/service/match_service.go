@@ -105,6 +105,11 @@ func (s MatchService) Delete(ctx context.Context, matchID int, userID int) error
 		return msg.Unauthorization("either cat or match request don't belong to user")
 	}
 
+	//Check if match already processed
+	if match.ApprovedAt.Valid || match.RejectedAt.Valid {
+		return msg.BadRequest("matchId is already approved / rejected")
+	}
+
 	// Delete the match
 	err = s.matchRepo.DeleteMatchByMatchId(ctx, matchID)
 	if err != nil {
@@ -133,8 +138,13 @@ func (s MatchService) RejectMatchRequest(ctx context.Context, matchParam entity.
 		return msg.Unauthorization("either cat or match request don't belong to user")
 	}
 
+	//Check if match already processed
+	if match.ApprovedAt.Valid || match.RejectedAt.Valid {
+		return msg.BadRequest("matchId is no longer valid")
+	}
+
 	// Delete the match
-	err = s.matchRepo.DeleteMatchByMatchId(ctx, int(matchParam.MatchId))
+	err = s.matchRepo.RejectByMatchId(ctx, int(matchParam.MatchId))
 	if err != nil {
 		return msg.BadRequest(err.Error())
 	}

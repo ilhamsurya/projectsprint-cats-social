@@ -212,7 +212,7 @@ func (r CatRepo) GetCat(ctx context.Context, param entity.GetCatParam, ageOperat
 		argsCount++
 	}
 	if param.Race != "" {
-		query += fmt.Sprintf(" AND c.race = LOWER($%d)", argsCount)
+		query += fmt.Sprintf(" AND c.race = $%d", argsCount)
 		args = append(args, &param.Race)
 		argsCount++
 	}

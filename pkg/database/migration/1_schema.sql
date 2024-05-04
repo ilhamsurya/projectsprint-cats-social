@@ -16,6 +16,7 @@ CREATE TABLE "cats" (
   "sex" varchar,
   "age_in_month" int,
   "description" varchar,
+  "has_matched" bool DEFAULT FALSE,
   "created_at" timestamp DEFAULT CURRENT_TIMESTAMP,
   "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP,
   "deleted_at" timestamp NULL DEFAULT NULL
@@ -25,7 +26,9 @@ CREATE TABLE "match_cats" (
   "id_match" SERIAL PRIMARY KEY,
   "id_user_cat" integer,
   "id_matched_cat" integer,
-  "is_matched" boolean
+  "created_at" timestamp DEFAULT CURRENT_TIMESTAMP,
+  "approved_at" timestamp NULL DEFAULT NULL
+  "rejected_at" timestamp NULL DEFAULT NULL
 );
 
 CREATE TABLE "cat_images" (

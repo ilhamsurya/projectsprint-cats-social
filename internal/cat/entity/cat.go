@@ -15,6 +15,7 @@ type Cat struct {
 	Description string       `db:"description" json:"description"`
 	CatImage    []CatImage   `json:"cat_image"`
 	MatchCat    []MatchCat   `json:"match_cat"`
+	HasMatched  bool         `db:"has_matched" json:"has_matched"`
 	CreatedAt   time.Time    `db:"created_at" json:"created_at"`
 	UpdatedAt   sql.NullTime `db:"updated_at" json:"updated_at"`
 	DeletedAt   sql.NullTime `db:"deleted_at" json:"deleted_at"`
@@ -32,6 +33,7 @@ type CatParam struct {
 	Sex         string   `json:"sex"`
 	AgeInMonth  int      `json:"ageInMonth"`
 	Description string   `json:"description"`
+	HasMatched  bool     `json:"hasMatched"`
 	ImageURLs   []string `json:"imageUrls"`
 }
 
@@ -95,8 +97,10 @@ type GetCatData struct {
 }
 
 type MatchCat struct {
-	IdMatch      uint32 `json:"id_match"`
-	IdMatchedCat uint32 `json:"id_matched_cat"`
-	IdUserCat    uint32 `json:"id_user_cat"`
-	IsMatched    bool   `json:"is_matched"`
+	IdMatch      uint32       `db:"id_match" json:"id_match"`
+	IdUserCat    uint32       `db:"id_user_cat" json:"id_user_cat"`
+	IdMatchedCat uint32       `db:"id_matched_cat" json:"id_matched_cat"`
+	CreatedAt    time.Time    `db:"created_at" json:"created_at"`
+	ApprovedAt   sql.NullTime `db:"approved_at" json:"approved_at"`
+	RejectedAt   sql.NullTime `db:"rejected_at" json:"rejected_at"`
 }

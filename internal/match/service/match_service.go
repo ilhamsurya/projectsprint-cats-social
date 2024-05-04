@@ -6,6 +6,7 @@ import (
 	catRepository "projectsphere/cats-social/internal/cat/repository"
 	"projectsphere/cats-social/internal/match/entity"
 	"projectsphere/cats-social/internal/match/repository"
+	"projectsphere/cats-social/pkg/protocol/msg"
 )
 
 type MatchService struct {
@@ -83,4 +84,70 @@ func (s MatchService) Create(ctx context.Context, matchParam entity.MatchCat) (e
 	return entity.MatchCatResponse{
 		Message: "success",
 	}, nil
+}
+
+func (s MatchService) Delete(ctx context.Context, matchID int, userID int) error {
+
+	//Get Match Info
+	match, err := s.matchRepo.GetMatchByID(ctx, int(matchID))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	// Fetch the cat information
+	userCat, err := s.catRepo.GetCatByID(ctx, int(match.IdUserCat))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	// Check if userCatId belongs to the user
+	if userCat.IdUser != uint32(userID) {
+		return msg.Unauthorization("either cat or match request don't belong to user")
+	}
+
+	//Check if match already processed
+	if match.ApprovedAt.Valid || match.RejectedAt.Valid {
+		return msg.BadRequest("matchId is already approved / rejected")
+	}
+
+	// Delete the match
+	err = s.matchRepo.DeleteMatchByMatchId(ctx, matchID)
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	return nil
+}
+
+func (s MatchService) RejectMatchRequest(ctx context.Context, matchParam entity.ProcessMatchRequest, userID int) error {
+
+	//Get Match Info
+	match, err := s.matchRepo.GetMatchByID(ctx, int(matchParam.MatchId))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	// Fetch the cat information
+	matchCat, err := s.catRepo.GetCatByID(ctx, int(match.IdMatchedCat))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	// Check if userCatId belongs to the user
+	if matchCat.IdUser != uint32(userID) {
+		return msg.Unauthorization("either cat or match request don't belong to user")
+	}
+
+	//Check if match already processed
+	if match.ApprovedAt.Valid || match.RejectedAt.Valid {
+		return msg.BadRequest("matchId is no longer valid")
+	}
+
+	// Delete the match
+	err = s.matchRepo.RejectByMatchId(ctx, int(matchParam.MatchId))
+	if err != nil {
+		return msg.BadRequest(err.Error())
+	}
+
+	return nil
 }

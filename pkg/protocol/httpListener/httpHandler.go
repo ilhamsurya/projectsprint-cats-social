@@ -63,18 +63,9 @@ func (h *HttpHandlerImpl) Router() *gin.Engine {
 	user.POST("/register", h.userHandler.Register)
 	user.POST("/login", h.userHandler.Login)
 
-	cat := r.Group("cat") // Adjusted route group
-	cat.Use(h.jwtAuth.JwtAuthUserMiddleware())
-	{
-		cat.PUT("/:id", h.catHandler.Update) // PUT method for updating cat with ID
-		cat.POST("", h.catHandler.Create)
-		cat.POST("/match", h.matchHandler.Create)
-	}
-
-	// user.Use(auth.JwtAuthUserMiddleware())
-	// {
-
-	// }
-
+	cat := r.Group("cat")                // Adjusted route group
+	cat.PUT("/:id", h.catHandler.Update) // PUT method for updating cat with ID
+	cat.POST("", h.catHandler.Create)
+	cat.POST("/match", h.matchHandler.Create)
 	return server
 }

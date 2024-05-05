@@ -166,10 +166,9 @@ func (r MatchRepo) GetMatchRequest(ctx context.Context, userID int) ([]entity.Ma
 		JOIN "users" u ON u.id_user = cr.id_user
 		JOIN "cats" mr ON  mr.id_cat = mc.id_matched_cat
 		JOIN "cat_images" mri ON mri.id_cat = mr.id_cat
-		WHERE u.id_user = $1
     `
 
-	rows, err := r.dbConnector.DB.QueryContext(ctx, query, userID)
+	rows, err := r.dbConnector.DB.QueryContext(ctx, query)
 	if err != nil {
 		return []entity.MatchCat{}, msg.InternalServerError(err.Error())
 	}

@@ -36,8 +36,13 @@ func (h MatchHandler) Create(c *gin.Context) {
 		return
 	}
 
+	userID, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	fmt.Print("ini payload", payload)
-	resp, err := h.matchSvc.Create(c.Request.Context(), *payload)
+	resp, err := h.matchSvc.Create(c.Request.Context(), *payload, int(userID))
 
 	if err != nil {
 		respError := msg.UnwrapRespError(err)

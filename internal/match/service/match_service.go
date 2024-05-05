@@ -20,7 +20,7 @@ func NewMatchService(matchRepo repository.MatchRepo, catRepo catRepository.CatRe
 	}
 }
 
-func (s *MatchService) Create(ctx context.Context, matchParam entity.MatchCat) (entity.MatchCatResponse, error) {
+func (s *MatchService) Create(ctx context.Context, matchParam entity.MatchCat, userID int) (entity.MatchCatResponse, error) {
 	if matchParam.IdMatchedCat == 0 || matchParam.IdUserCat == 0 {
 		return entity.MatchCatResponse{}, &msg.RespError{
 			Code:    400,
@@ -57,13 +57,13 @@ func (s *MatchService) Create(ctx context.Context, matchParam entity.MatchCat) (
 		}
 	}
 
-	matchedCatOwnerID, err := s.catRepo.GetCatOwner(ctx, int(matchParam.IdMatchedCat))
-	if err != nil {
-		return entity.MatchCatResponse{}, &msg.RespError{
-			Code:    400,
-			Message: "Not match owner",
-		}
-	}
+	// matchedCatOwnerID, err := s.catRepo.GetCatOwner(ctx, int(matchParam.IdMatchedCat))
+	// if err != nil {
+	// 	return entity.MatchCatResponse{}, &msg.RespError{
+	// 		Code:    400,
+	// 		Message: "Not match owner",
+	// 	}
+	// }
 
 	userCatOwnerID, err := s.catRepo.GetCatOwner(ctx, int(matchParam.IdUserCat))
 	if err != nil {
@@ -73,12 +73,19 @@ func (s *MatchService) Create(ctx context.Context, matchParam entity.MatchCat) (
 		}
 	}
 
-	if matchedCatOwnerID == userCatOwnerID {
+	if userCatOwnerID != userID {
 		return entity.MatchCatResponse{}, &msg.RespError{
-			Code:    400,
-			Message: "MatchCatId and UserCatId are from the same owner",
+			Code:    201,
+			Message: "Not match owner",
 		}
 	}
+
+	// if matchedCatOwnerID == userCatOwnerID {
+	// 	return entity.MatchCatResponse{}, &msg.RespError{
+	// 		Code:    400,
+	// 		Message: "MatchCatId and UserCatId are from the same owner",
+	// 	}
+	// }
 
 	if matchCat.IdCat == userCat.IdCat {
 		return entity.MatchCatResponse{}, &msg.RespError{

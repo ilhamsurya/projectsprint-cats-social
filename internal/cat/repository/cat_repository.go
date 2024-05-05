@@ -130,6 +130,7 @@ func (r CatRepo) GetCatByID(ctx context.Context, catID int) (entity.Cat, error) 
     `
 	err := r.dbConnector.DB.QueryRowContext(ctx, query, catID).Scan(
 		&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description)
+	fmt.Println(err)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return entity.Cat{}, errors.New("404: Cat not found")
@@ -157,7 +158,7 @@ func (r CatRepo) CatExists(ctx context.Context, catID int) bool {
 func (r CatRepo) GetCatOwner(ctx context.Context, catID int) (int, error) {
 	var ownerID int
 	query := `
-        SELECT id_user FROM "user_cats" WHERE id_cat = $1
+        SELECT id_user FROM "cats" WHERE id_cat = $1
     `
 	err := r.dbConnector.DB.QueryRowContext(ctx, query, catID).Scan(&ownerID)
 	if err != nil {
@@ -173,7 +174,7 @@ func (r CatRepo) GetCatOwner(ctx context.Context, catID int) (int, error) {
 func (r CatRepo) IsUserCatAssociationValid(ctx context.Context, userID, catID int) (bool, error) {
 	var count int
 	query := `
-        SELECT COUNT(*) FROM "user_cats" WHERE id_user = $1 AND id_cat = $2
+        SELECT COUNT(*) FROM "cats" WHERE id_user = $1 AND id_cat = $2
     `
 	err := r.dbConnector.DB.QueryRowContext(ctx, query, userID, catID).Scan(&count)
 	if err != nil {

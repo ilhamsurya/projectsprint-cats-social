@@ -124,3 +124,10 @@ func Unauthorization(msg string) error {
 		Message: msg,
 	}
 }
+
+func Success(msg string) error {
+	return &RespError{
+		Code:    http.StatusOK,
+		Message: msg,
+	}
+}

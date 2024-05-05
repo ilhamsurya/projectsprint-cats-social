@@ -3,12 +3,12 @@ APPLICATION:
   GROUP: v1/
 DB:
   POSTGRE:
-    HOST: 0.0.0.0
-    NAME: cats_social_db
-    PORT: 5432
-    USERNAME: cats_social_db_owner
-    PASSWORD: 4j2kxetmuPIK
-    PARAMS: "sslmode=disable"
+    DB_HOST: 0.0.0.0
+    DB_NAME: cats_social_db
+    DB_PORT: 5432
+    DB_USERNAME: cats_social_db_owner
+    DB_PASSWORD: 4j2kxetmuPIK
+    DB_PARAMS: "sslmode=disable"
 AUTH:
   JWT_SECRET: Kkslskkwokwkswojwnwjiji
   # 8 houre in minute

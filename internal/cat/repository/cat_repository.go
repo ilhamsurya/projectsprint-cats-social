@@ -125,11 +125,11 @@ func (r CatRepo) GetUserCatGender(ctx context.Context, catID int) (string, error
 func (r CatRepo) GetCatByID(ctx context.Context, catID int) (entity.Cat, error) {
 	var cat entity.Cat
 	query := `
-        SELECT id_cat, name, race, sex, age_in_month, description
+        SELECT id_cat, id_user, name, race, sex, age_in_month, description
         FROM "cats" WHERE id_cat = $1
     `
 	err := r.dbConnector.DB.QueryRowContext(ctx, query, catID).Scan(
-		&cat.IdCat, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description)
+		&cat.IdCat, &cat.IdUser, &cat.Name, &cat.Race, &cat.Sex, &cat.AgeInMonth, &cat.Description)
 	fmt.Println(err)
 	if err != nil {
 		if err == sql.ErrNoRows {

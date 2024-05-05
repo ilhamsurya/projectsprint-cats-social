@@ -19,13 +19,13 @@ type Config struct {
 	} `mapstructure:"APPLICATION"`
 	DB struct {
 		Postgre struct {
-			Host    string `mapstructure:"HOST"`
-			Port    int    `mapstructure:"PORT"`
-			Name    string `mapstructure:"NAME"`
-			User    string `mapstructure:"USERNAME"`
-			Pass    string `mapstructure:"PASSWORD"`
+			Host    string `mapstructure:"DB_HOST"`
+			Port    int    `mapstructure:"DB_PORT"`
+			Name    string `mapstructure:"DB_NAME"`
+			User    string `mapstructure:"DB_USERNAME"`
+			Pass    string `mapstructure:"DB_PASSWORD"`
 			Migrate bool   `mapstructure:"MIGRATE"`
-			Params  string `mapstructure:"PARAMS"`
+			Params  string `mapstructure:"DB_PARAMS"`
 		} `mapstructure:"POSTGRE"`
 	} `mapstructure:"DB"`
 	Auth struct {

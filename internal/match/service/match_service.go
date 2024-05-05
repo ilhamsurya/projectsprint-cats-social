@@ -128,7 +128,7 @@ func (s MatchService) Delete(ctx context.Context, matchID int, userID int) error
 
 	// Check if userCatId belongs to the user
 	if userCat.IdUser != uint32(userID) {
-		return msg.Unauthorization("either cat or match request don't belong to user")
+		return msg.Success("either cat or match request don't belong to user")
 	}
 
 	//Check if match already processed
@@ -161,7 +161,7 @@ func (s MatchService) RejectMatchRequest(ctx context.Context, matchParam entity.
 
 	// Check if matchCatId belongs to the user
 	if matchCat.IdUser != uint32(userID) {
-		return msg.Unauthorization("either cat or match request don't belong to user")
+		return msg.Success("either cat or match request don't belong to user")
 	}
 
 	//Check if match already processed
@@ -194,7 +194,7 @@ func (s MatchService) ApproveMatchRequest(ctx context.Context, matchParam entity
 
 	// Check if matchCatId belongs to the user
 	if matchCat.IdUser != uint32(userID) {
-		return msg.Unauthorization("either cat or match request don't belong to user")
+		return msg.Success("either cat or match request don't belong to user")
 	}
 
 	//Check if match already processed

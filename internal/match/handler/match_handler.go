@@ -166,3 +166,25 @@ func (h MatchHandler) ApproveMatchRequest(c *gin.Context) {
 
 	c.JSON(http.StatusOK, msg.ReturnResult("successfully approve the cat match request", nil))
 }
+
+func (h MatchHandler) GetMatchRequest(c *gin.Context) {
+	// Check if the header is missing
+	if c.GetHeader("Authorization") == "" {
+		c.JSON(http.StatusUnauthorized, msg.Unauthorization("No authorization header provided"))
+		return
+	}
+
+	userID, err := auth.GetUserIdInsideCtx(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	res, err := h.matchSvc.GetMatchRequest(c.Request.Context(), int(userID))
+	if err != nil {
+		respError := msg.UnwrapRespError(err)
+		c.JSON(respError.Code, respError)
+		return
+	}
+
+	c.JSON(http.StatusOK, msg.ReturnResult("success", res))
+}

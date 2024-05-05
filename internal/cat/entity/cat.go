@@ -2,6 +2,7 @@ package entity
 
 import (
 	"database/sql"
+	"projectsphere/cats-social/internal/user/entity"
 	"time"
 )
 
@@ -15,6 +16,7 @@ type Cat struct {
 	Description string       `db:"description" json:"description"`
 	CatImage    []CatImage   `json:"cat_image"`
 	MatchCat    []MatchCat   `json:"match_cat"`
+	User        entity.User  `json:"user"`
 	HasMatched  bool         `db:"has_matched" json:"has_matched"`
 	CreatedAt   time.Time    `db:"created_at" json:"created_at"`
 	UpdatedAt   sql.NullTime `db:"updated_at" json:"updated_at"`
